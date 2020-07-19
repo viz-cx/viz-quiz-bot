@@ -26,7 +26,7 @@
     "airtable": "^0.8.1",
     "dotenv": "^8.2.0",
     "mongoose": "^5.9.25",
-    "telegraf": "^3.38.0",
+    "telegraf": "https://github.com/telegraf/telegraf#develop",
     "telegraf-i18n": "^6.6.0",
     "typescript": "^3.9.7"
   }
