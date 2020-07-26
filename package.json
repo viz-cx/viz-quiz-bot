@@ -22,7 +22,7 @@
     "@typegoose/typegoose": "^7.3.0",
     "@types/dotenv": "^8.2.0",
     "@types/mongoose": "^5.7.32",
-    "@types/node": "^14.0.23",
+    "@types/node": "^14.0.26",
     "airtable": "^0.8.1",
     "dotenv": "^8.2.0",
     "mongoose": "^5.9.25",
