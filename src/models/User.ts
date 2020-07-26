@@ -6,14 +6,22 @@ export class User {
 
   @prop({ required: true, default: 'en' })
   language: string
+
+  // Airtable row ids
+  @prop({ type: String  })
+  answeredRecords: string[]
+
+  @prop()
+  quizMessageId?: number
+
+  @prop()
+  quizId?: string
 }
 
-// Get User model
 const UserModel = getModelForClass(User, {
   schemaOptions: { timestamps: true },
 })
 
-// Get or create user
 export async function findUser(id: number) {
   let user = await UserModel.findOne({ id })
   if (!user) {
@@ -23,5 +31,10 @@ export async function findUser(id: number) {
       user = await UserModel.findOne({ id })
     }
   }
+  return user
+}
+
+export async function findUserByQuiz(quizId: string) {
+  let user = await UserModel.findOne({ quizId })
   return user
 }

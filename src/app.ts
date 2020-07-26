@@ -10,11 +10,11 @@ import { setupI18N } from './helpers/i18n'
 import { setupLanguage } from './commands/language'
 import { attachUser } from './middlewares/attachUser'
 
-bot.use(checkAnswer)
 // Check time
 bot.use(checkTime)
 // Attach user
 bot.use(attachUser)
+bot.use(checkAnswer)
 // Setup localization
 setupI18N(bot)
 // Setup commands
