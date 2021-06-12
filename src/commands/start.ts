@@ -46,11 +46,15 @@ export function sendQuiz(ctx: Context) {
         let unansweredRecords = filteredRecords
             .filter((record) => answeredRecords.indexOf(record.id) === -1)
         if (unansweredRecords.length === 0) {
-            let replyMsg = ctx.reply("Закончились неотвеченные вопросы, попробуйте завтра", {reply_markup: nextQuestionKeyboard})
+            let replyMsg = ctx.reply("Закончились неотвеченные вопросы, попробуйте завтра", { reply_markup: nextQuestionKeyboard })
             replyMsg.then(msg => {
                 let user = ctx.dbuser
                 if (user.quizMessageId) {
-                    ctx.deleteMessage(user.quizMessageId)
+                    try {
+                        ctx.deleteMessage(user.quizMessageId)
+                    } catch (err) {
+                        console.log("Answer not deleted")
+                    }
                 }
                 user.quizMessageId = msg.message_id
                 user.save()
@@ -76,7 +80,11 @@ export function sendQuiz(ctx: Context) {
         quizMsg.then(msg => {
             let user = ctx.dbuser
             if (user.quizMessageId) {
-                ctx.deleteMessage(user.quizMessageId)
+                try {
+                    ctx.deleteMessage(user.quizMessageId)
+                } catch (err) {
+                    console.log("Answer not deleted")
+                }
             }
             user.answeredRecords.push(randomRecord.id)
             user.quizId = msg.poll.id

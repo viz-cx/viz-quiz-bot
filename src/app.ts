@@ -23,7 +23,6 @@ setupHelp(bot)
 setupLanguage(bot)
 
 // Start bot
-bot.startPolling()
-
-// Log
-console.info('Bot is up and running')
+bot.launch().then(() => {
+    console.info(`Bot ${bot.botInfo.username} is up and running`)
+})

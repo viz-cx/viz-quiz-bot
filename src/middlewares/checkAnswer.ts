@@ -6,7 +6,7 @@ export const nextQuestionKeyboard = {
 }
 
 export async function checkAnswer(ctx: Context, next: () => any) {
-    if (ctx.callbackQuery && ctx.callbackQuery.data == 'next_question') {
+    if (ctx.callbackQuery && (ctx.callbackQuery as any).data == 'next_question') {
         sendQuiz(ctx)
     }
     if (ctx.updateType === 'poll') {
