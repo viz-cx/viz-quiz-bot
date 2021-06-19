@@ -1,14 +1,10 @@
 import { Context } from 'telegraf'
-import { sendQuiz } from '../commands/start'
 
 export const nextQuestionKeyboard = {
     inline_keyboard: [[{ text: "Следующий вопрос", callback_data: "next_question" }]]
 }
 
 export async function checkAnswer(ctx: Context, next: () => any) {
-    if (ctx.callbackQuery && (ctx.callbackQuery as any).data == 'next_question') {
-        sendQuiz(ctx)
-    }
     if (ctx.updateType === 'poll') {
         let options = ctx.poll.options
         var answerID = -1
@@ -24,9 +20,9 @@ export async function checkAnswer(ctx: Context, next: () => any) {
         if (!ctx.poll.is_closed && allVotesCount == 1 && isCorrectAnswer) {
             console.log('TODO: award!')
         }
-        addNextQuestionButton(ctx)
+        setTimeout(() => addNextQuestionButton(ctx), 2000)
     } else {
-        next()
+        return next()
     }
 }
 

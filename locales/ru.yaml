@@ -1,5 +1,6 @@
 name: Русский
 help: |
-  <b>Бот</b> является примером бота на Телеграфе.
+  @${botname} — пример бота, использующего механику <a href="https://reg.readdle.me/?set_lang=ru">блокчейна VIZ</a> и телеграма.
 language: Пожалуйста, выберите язык.
 language_selected: <b>Бот</b> теперь говорит по-русски.
+quiz_button: Квиз

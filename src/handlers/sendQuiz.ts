@@ -1,13 +1,10 @@
-import { Telegraf, Context } from "telegraf"
+import { Context } from "telegraf"
 import { nextQuestionKeyboard } from "../middlewares/checkAnswer"
 
-export function setupStart(bot: Telegraf<Context>) {
-    bot.command(['start'], ctx => {
-        sendQuiz(ctx)
-    })
-}
-
 export function sendQuiz(ctx: Context) {
+    // if (true) {
+    //     ctx.answerCbQuery('123')
+    // }
     let Airtable = require('airtable')
     Airtable.configure({
         endpointUrl: 'https://api.airtable.com',
@@ -37,14 +34,14 @@ export function sendQuiz(ctx: Context) {
             }
             let e = record.get('Explanation')
             if (e.length > 200) {
-                console.log('Ответ к вопросу', q, 'слишком длинный')
+                // console.log('Ответ к вопросу', q, 'слишком длинный')
                 return false
             }
             return true
         })
         let answeredRecords = ctx.dbuser.answeredRecords
         let unansweredRecords = filteredRecords
-            .filter((record) => answeredRecords.indexOf(record.id) === -1)
+            // .filter((record) => answeredRecords.indexOf(record.id) === -1)
         if (unansweredRecords.length === 0) {
             let replyMsg = ctx.reply("Закончились неотвеченные вопросы, попробуйте завтра", { reply_markup: nextQuestionKeyboard })
             replyMsg.then(msg => {

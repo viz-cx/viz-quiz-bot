@@ -4,11 +4,13 @@ export class User {
   @prop({ required: true, index: true, unique: true })
   id: number
 
-  @prop({ required: true, default: 'en' })
+  @prop({ required: true, default: 'ru' })
   language: string
 
-  // Airtable row ids
-  @prop({ type: String  })
+  @prop({ required: false })
+  referrer?: number
+
+  @prop({ type: String })
   answeredRecords: string[]
 
   @prop()
