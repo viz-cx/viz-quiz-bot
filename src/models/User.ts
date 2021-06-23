@@ -1,4 +1,5 @@
-import { prop, getModelForClass } from '@typegoose/typegoose'
+import { prop, getModelForClass, Ref } from '@typegoose/typegoose'
+import { Quiz } from './Quiz'
 
 export class User {
   @prop({ required: true, index: true, unique: true })
@@ -16,8 +17,11 @@ export class User {
   @prop()
   quizMessageId?: number
 
-  @prop()
-  quizId?: string
+  @prop({ required: false, index: true })
+  pollId?: string // in telegram
+
+  @prop({ ref: () => Quiz })
+  quizId?: Ref<Quiz> // in database
 }
 
 const UserModel = getModelForClass(User, {
@@ -36,7 +40,7 @@ export async function findUser(id: number) {
   return user
 }
 
-export async function findUserByQuiz(quizId: string) {
-  let user = await UserModel.findOne({ quizId })
+export async function findUserByPollId(pollId: string) {
+  let user = await UserModel.findOne({ pollId: pollId })
   return user
 }

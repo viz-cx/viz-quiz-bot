@@ -36,9 +36,7 @@ export function sendMainKeyboard(ctx: Context) {
 }
 
 function mainKeyboard(language: string) {
-    const play = m.button.callback('🤯 ' + i18n.t(language, 'quiz_button'), 'play')
-    // const game = m.button.callback('🎮 ' + i18n.t(language, 'game_button'), 'game')
-    // const lang = m.button.callback('🌐 ' + i18n.t(language, 'language_button'), 'language')
-    const lottery = m.button.callback('🍀 ' + 'hello', 'lottery')
-    return m.keyboard([[lottery]]).resize()
+    const play = m.button.callback('🧠 ' + i18n.t(language, 'quiz_button'), 'play')
+    const results = m.button.callback('🏆 ' + i18n.t(language, 'results_button'), 'results')
+    return m.keyboard([[play, results]]).resize()
 }

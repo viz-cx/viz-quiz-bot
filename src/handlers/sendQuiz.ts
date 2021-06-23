@@ -2,6 +2,7 @@ import { Context } from "telegraf"
 import { nextQuestionKeyboard } from "../middlewares/checkAnswer"
 
 export function sendQuiz(ctx: Context) {
+    deletePreviousQuestion(ctx)
     // if (true) {
     //     ctx.answerCbQuery('123')
     // }
@@ -41,18 +42,12 @@ export function sendQuiz(ctx: Context) {
         })
         let answeredRecords = ctx.dbuser.answeredRecords
         let unansweredRecords = filteredRecords
-            // .filter((record) => answeredRecords.indexOf(record.id) === -1)
+            .filter((record) => answeredRecords.indexOf(record.id) === -1)
         if (unansweredRecords.length === 0) {
             let replyMsg = ctx.reply("Закончились неотвеченные вопросы, попробуйте завтра", { reply_markup: nextQuestionKeyboard })
             replyMsg.then(msg => {
+                deletePreviousQuestion(ctx)
                 let user = ctx.dbuser
-                if (user.quizMessageId) {
-                    try {
-                        ctx.deleteMessage(user.quizMessageId)
-                    } catch (err) {
-                        console.log("Answer not deleted")
-                    }
-                }
                 user.quizMessageId = msg.message_id
                 user.save()
             })
@@ -76,20 +71,23 @@ export function sendQuiz(ctx: Context) {
         })
         quizMsg.then(msg => {
             let user = ctx.dbuser
-            if (user.quizMessageId) {
-                try {
-                    ctx.deleteMessage(user.quizMessageId)
-                } catch (err) {
-                    console.log("Answer not deleted")
-                }
-            }
-            user.answeredRecords.push(randomRecord.id)
-            user.quizId = msg.poll.id
+            user.pollId = msg.poll.id
             user.quizMessageId = msg.message_id
             user.save()
             // setTimeout(function () { closePoll(ctx, msg.message_id) }, secondsToAnswer * 1000);
         })
     })
+}
+
+export function deletePreviousQuestion(ctx: Context) {
+    let user = ctx.dbuser
+    if (user.quizMessageId) {
+        try {
+            ctx.deleteMessage(user.quizMessageId)
+        } catch(err) {
+            console.log("Answer not deleted:", err)
+        }
+    }
 }
 
 function shuffle(array) {

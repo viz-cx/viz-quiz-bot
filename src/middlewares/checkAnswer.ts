@@ -18,7 +18,9 @@ export async function checkAnswer(ctx: Context, next: () => any) {
         }
         let isCorrectAnswer = (answerID == ctx.poll.correct_option_id)
         if (!ctx.poll.is_closed && allVotesCount == 1 && isCorrectAnswer) {
-            console.log('TODO: award!')
+            let user = ctx.dbuser
+            user.answeredRecords.push(ctx.poll.id)
+            user.save().then(u => console.log('TODO: add tokens'))
         }
         setTimeout(() => addNextQuestionButton(ctx), 2000)
     } else {
