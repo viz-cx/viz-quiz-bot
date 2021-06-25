@@ -1,4 +1,4 @@
-import { findUnasweredQuizzes } from "@/models/Quiz"
+import { findById, findUnasweredQuizzes, Quiz } from "@/models/Quiz"
 import { Context } from "telegraf"
 import { nextQuestionKeyboard } from "@/middlewares/checkAnswer"
 
@@ -19,7 +19,13 @@ export async function sendQuiz(ctx: Context) {
         })
         return
     }
-    let randomQuiz = unansweredQuizzes[Math.floor(Math.random() * unansweredQuizzes.length)]
+    let randomQuiz: Quiz
+    if (ctx.dbuser.quizId !== null) {
+        randomQuiz = await findById(ctx.dbuser.quizId)
+    }
+    if (!randomQuiz) {
+        randomQuiz = unansweredQuizzes[Math.floor(Math.random() * unansweredQuizzes.length)]
+    }
     let question = randomQuiz.question
     let answers = randomQuiz.answers
     let correctValue = answers[0]

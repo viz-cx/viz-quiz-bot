@@ -22,6 +22,10 @@ export const QuizModel = getModelForClass(Quiz, {
     schemaOptions: { timestamps: true },
 })
 
+export async function findById(id: string) {
+    return await QuizModel.findOne({ _id: id })
+}
+
 export async function findUnasweredQuizzes(answeredIds: mongoose.Types.ObjectId[]): Promise<DocumentType<Quiz>> {
     return await QuizModel.aggregate([
         { $match: { _id: { "$nin": answeredIds } } },
