@@ -29,7 +29,10 @@ export function proposeQuiz(ctx: Context, next: () => any) {
         quiz.authorId = author.id
         quiz.pollId = poll.id
         quiz.save()
-            .then(quiz => console.log('TODO: Pay to author'))
+            .then(quiz => {
+                console.log('TODO: Pay to author')
+                ctx.reply('Quiz successfully added')
+            })
             .catch(err => {
                 if (err.message.includes('E11000')) {
                     ctx.reply('Quiz already added')

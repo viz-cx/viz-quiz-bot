@@ -11,10 +11,10 @@ import { sendStart } from '@/handlers/sendStart'
 import { i18n, attachI18N } from '@/helpers/i18n'
 import { setLanguage, sendLanguage } from '@/handlers/language'
 import { attachUser } from '@/middlewares/attachUser'
-import { sendQuiz } from './handlers/sendQuiz'
-import { checkAnswer } from './middlewares/checkAnswer'
-import { nextQuestionCallback } from './middlewares/nextQuestionCallback'
-import { proposeQuiz } from './middlewares/proposeQuiz'
+import { sendQuiz } from '@/handlers/sendQuiz'
+import { checkAnswer } from '@/middlewares/checkAnswer'
+import { nextQuestionCallback } from '@/middlewares/nextQuestionCallback'
+import { proposeQuiz } from '@/middlewares/proposeQuiz'
 
 // Middlewares
 bot.use(ignoreOldMessageUpdates)

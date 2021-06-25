@@ -18,10 +18,12 @@ export async function checkAnswer(ctx: Context, next: () => any) {
         }
         let isCorrectAnswer = (answerID == ctx.poll.correct_option_id)
         if (!ctx.poll.is_closed && allVotesCount == 1 && isCorrectAnswer) {
-            let user = ctx.dbuser
-            user.answeredRecords.push(ctx.poll.id)
-            user.save().then(u => console.log('TODO: add tokens'))
+            console.log('TODO: add tokens')
         }
+        let user = ctx.dbuser
+        user.answeredQuizIds.push(user.quizId)
+        user.quizId = null
+        user.save()
         setTimeout(() => addNextQuestionButton(ctx), 2000)
     } else {
         return next()
@@ -30,4 +32,5 @@ export async function checkAnswer(ctx: Context, next: () => any) {
 
 function addNextQuestionButton(ctx: Context) {
     ctx.telegram.editMessageReplyMarkup(ctx.dbuser.id, ctx.dbuser.quizMessageId, undefined, nextQuestionKeyboard)
+        .catch(err => console.log(err.message))
 }

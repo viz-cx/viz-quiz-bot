@@ -1,4 +1,4 @@
-import { prop, getModelForClass, Ref } from '@typegoose/typegoose'
+import { prop, getModelForClass, Ref, mongoose } from '@typegoose/typegoose'
 import { Quiz } from './Quiz'
 
 export class User {
@@ -11,20 +11,20 @@ export class User {
   @prop({ required: false })
   referrer?: number
 
-  @prop({ type: String })
-  answeredRecords: string[]
-
   @prop()
   quizMessageId?: number
 
   @prop({ required: false, index: true })
   pollId?: string // in telegram
 
-  @prop({ ref: () => Quiz })
-  quizId?: Ref<Quiz> // in database
+  @prop()
+  quizId?: mongoose.Types.ObjectId; // in database, current
+
+  @prop({ type: mongoose.Types.ObjectId, unique: true })
+  answeredQuizIds: mongoose.Types.ObjectId[]
 }
 
-const UserModel = getModelForClass(User, {
+export const UserModel = getModelForClass(User, {
   schemaOptions: { timestamps: true },
 })
 
