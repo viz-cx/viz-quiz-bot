@@ -6,5 +6,5 @@ mongoose.connect(process.env.MONGO, { useNewUrlParser: true, useUnifiedTopology:
 mongoose.set('useCreateIndex', true)
 
 // Export models
-export * from './User'
-export * from './Quiz'
+export * from '@/models/User'
+export * from '@/models/Quiz'

@@ -1,5 +1,5 @@
 import { prop, getModelForClass, DocumentType, mongoose } from '@typegoose/typegoose'
-import { Base } from '@typegoose/typegoose/lib/defaultClasses';
+import { Base } from '@typegoose/typegoose/lib/defaultClasses'
 
 export class Quiz extends Base<mongoose.Schema.Type.String> {
     @prop()
@@ -22,7 +22,7 @@ export const QuizModel = getModelForClass(Quiz, {
     schemaOptions: { timestamps: true },
 })
 
-export async function findById(id: string) {
+export async function findQuizById(id: string): Promise<DocumentType<Quiz>> {
     return await QuizModel.findOne({ _id: id })
 }
 

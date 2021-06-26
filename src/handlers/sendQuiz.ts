@@ -1,4 +1,4 @@
-import { findById, findUnasweredQuizzes, Quiz } from "@/models/Quiz"
+import { findQuizById, findUnasweredQuizzes, Quiz } from "@/models/Quiz"
 import { Context } from "telegraf"
 import { nextQuestionKeyboard } from "@/middlewares/checkAnswer"
 
@@ -21,7 +21,7 @@ export async function sendQuiz(ctx: Context) {
     }
     let randomQuiz: Quiz
     if (ctx.dbuser.quizId !== null) {
-        randomQuiz = await findById(ctx.dbuser.quizId)
+        randomQuiz = await findQuizById(ctx.dbuser.quizId)
     }
     if (!randomQuiz) {
         randomQuiz = unansweredQuizzes[Math.floor(Math.random() * unansweredQuizzes.length)]
@@ -54,12 +54,8 @@ export async function sendQuiz(ctx: Context) {
 export function deletePreviousMessage(ctx: Context) {
     let user = ctx.dbuser
     if (user.quizMessageId) {
-        try {
-            ctx.deleteMessage(user.quizMessageId)
-                .catch(err => console.log("Message not deleted:", err))
-        } catch (err) {
-            console.log("Message not deleted:", err)
-        }
+        ctx.deleteMessage(user.quizMessageId)
+            .catch(err => console.log("Message not deleted:", err))
     }
 }
 

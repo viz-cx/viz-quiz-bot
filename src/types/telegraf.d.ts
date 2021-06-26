@@ -1,5 +1,5 @@
 import I18N from 'telegraf-i18n'
-import { User } from '../models'
+import { User } from '@/models/User'
 import { DocumentType } from '@typegoose/typegoose'
 
 declare module 'telegraf' {

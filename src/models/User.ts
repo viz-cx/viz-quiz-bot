@@ -1,5 +1,4 @@
-import { prop, getModelForClass, Ref, mongoose } from '@typegoose/typegoose'
-import { Quiz } from './Quiz'
+import { prop, getModelForClass, mongoose } from '@typegoose/typegoose'
 
 export class User {
   @prop({ required: true, index: true, unique: true })

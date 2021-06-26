@@ -1,6 +1,6 @@
-import { findUser } from "../models"
+import { findUser } from "@/models/User"
 import { Context, Markup as m } from "telegraf"
-import { i18n } from "../helpers/i18n"
+import { i18n } from "@/helpers/i18n"
 
 export function sendStart(ctx: Context) {
     const payload: string = (ctx as any)['startPayload']
