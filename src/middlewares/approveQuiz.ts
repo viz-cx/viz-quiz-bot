@@ -2,7 +2,7 @@ import { Context } from 'telegraf'
 import { Poll, User } from 'telegraf/typings/core/types/typegram'
 import { QuizModel } from '@/models/Quiz'
 
-export function proposeQuiz(ctx: Context, next: () => any) {
+export function approveQuiz(ctx: Context, next: () => any) {
     const adminID = 38968897
     if (ctx.chat.id !== adminID) {
         return next()

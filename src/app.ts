@@ -14,7 +14,7 @@ import { attachUser } from '@/middlewares/attachUser'
 import { sendQuiz } from '@/handlers/sendQuiz'
 import { checkAnswer } from '@/middlewares/checkAnswer'
 import { nextQuestionCallback } from '@/middlewares/nextQuestionCallback'
-import { proposeQuiz } from '@/middlewares/proposeQuiz'
+import { approveQuiz } from '@/middlewares/approveQuiz'
 
 // Middlewares
 bot.use(ignoreOldMessageUpdates)
@@ -22,7 +22,7 @@ bot.use(attachUser)
 bot.use(i18n.middleware(), attachI18N)
 bot.use(checkAnswer)
 bot.use(nextQuestionCallback)
-bot.use(proposeQuiz)
+bot.use(approveQuiz)
 // Commands
 bot.command('start', sendStart)
 bot.command('language', sendLanguage)
