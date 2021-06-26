@@ -4,11 +4,11 @@ import { nextQuestionKeyboard } from "@/middlewares/checkAnswer"
 
 export async function sendQuiz(ctx: Context) {
     deletePreviousMessage(ctx)
-    let answeredQuizIds = ctx.dbuser.answeredQuizIds
-    if (answeredQuizIds === null) {
-        answeredQuizIds = []
+    let answeredQuizzes = ctx.dbuser.answeredQuizzes
+    if (answeredQuizzes === null) {
+        answeredQuizzes = []
     }
-    let unansweredQuizzes = await findUnasweredQuizzes(answeredQuizIds)
+    let unansweredQuizzes = await findUnasweredQuizzes(answeredQuizzes)
     if (unansweredQuizzes.length === 0) {
         let replyMsg = ctx.reply("Закончились неотвеченные вопросы, попробуйте завтра", { reply_markup: nextQuestionKeyboard })
         replyMsg.then(msg => {

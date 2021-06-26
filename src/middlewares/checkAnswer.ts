@@ -1,3 +1,5 @@
+import { User, UserModel } from '@/models/User'
+import { DocumentType } from '@typegoose/typegoose'
 import { Context } from 'telegraf'
 
 export const nextQuestionKeyboard = {
@@ -6,6 +8,9 @@ export const nextQuestionKeyboard = {
 
 export async function checkAnswer(ctx: Context, next: () => any) {
     if (ctx.updateType === 'poll') {
+        let user = ctx.dbuser
+        if (ctx.poll.type !== 'quiz') { console.log('Poll is not quiz'); return }
+        if (ctx.poll.id !== user.pollId) { console.log(`Not current pool for ${user.id}`); return }
         let options = ctx.poll.options
         var answerID = -1
         var allVotesCount = 0
@@ -16,12 +21,18 @@ export async function checkAnswer(ctx: Context, next: () => any) {
                 answerID = i
             }
         }
-        let isCorrectAnswer = (answerID == ctx.poll.correct_option_id)
+        let isCorrectAnswer = (answerID === ctx.poll.correct_option_id)
         if (!ctx.poll.is_closed && allVotesCount == 1 && isCorrectAnswer) {
-            console.log('TODO: add tokens')
+            const baseValue = 100
+            const addValue = baseValue + (baseValue / 10 * user.multiplier)
+            user.balance = user.balance + addValue
+            user.multiplier = user.multiplier + 1
+            console.log(`Add ${addValue} to ${user.id} for right answer (now ${user.balance})`)
+            // TODO: ctx.reply('Add value')
+        } else {
+            user.multiplier = 0
         }
-        let user = ctx.dbuser
-        user.answeredQuizIds.push(user.quizId)
+        user.answeredQuizzes.push(user.quizId)
         user.quizId = null
         user.save()
         setTimeout(() => addNextQuestionButton(ctx), 2000)
