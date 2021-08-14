@@ -10,7 +10,7 @@ export async function sendQuiz(ctx: Context) {
     }
     let unansweredQuizzes = await findUnasweredQuizzes(answeredQuizzes)
     if (unansweredQuizzes.length === 0) {
-        let replyMsg = ctx.reply("Закончились неотвеченные вопросы, попробуйте завтра", { reply_markup: nextQuestionKeyboard })
+        let replyMsg = ctx.reply(ctx.i18n.t('no_unanswered_quizzes'), { reply_markup: nextQuestionKeyboard })
         replyMsg.then(msg => {
             let user = ctx.dbuser
             user.quizMessageId = msg.message_id
@@ -51,11 +51,14 @@ export async function sendQuiz(ctx: Context) {
     })
 }
 
-export function deletePreviousMessage(ctx: Context) {
+export async function deletePreviousMessage(ctx: Context) {
     let user = ctx.dbuser
     if (user.quizMessageId) {
-        ctx.deleteMessage(user.quizMessageId)
-            .catch(err => console.log("Message not deleted:", err))
+        try {
+            await ctx.deleteMessage(user.quizMessageId)
+        } catch (err) {
+            console.log('Message', user.quizMessageId, 'for user', user.id, 'not deleted')
+        }
     }
 }
 

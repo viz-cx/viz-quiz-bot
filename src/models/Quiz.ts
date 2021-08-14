@@ -26,6 +26,10 @@ export async function findQuizById(id: string): Promise<DocumentType<Quiz>> {
     return await QuizModel.findOne({ _id: id })
 }
 
+export async function findQuizByPollId(pollId: string): Promise<DocumentType<Quiz>> {
+    return await QuizModel.findOne({ pollId: pollId })
+}
+
 export async function findUnasweredQuizzes(answeredIds: mongoose.Types.ObjectId[]): Promise<DocumentType<Quiz>> {
     return await QuizModel.aggregate([
         { $match: { _id: { "$nin": answeredIds } } },
