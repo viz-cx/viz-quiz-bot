@@ -3,7 +3,7 @@ import { DocumentType } from '@typegoose/typegoose'
 import { Context } from 'telegraf'
 
 export const nextQuestionKeyboard = {
-    inline_keyboard: [[{ text: "Следующий вопрос", callback_data: "next_question" }]]
+    inline_keyboard: [[{ text: "Следующий квиз", callback_data: "next_quiz" }]]
 }
 
 export async function checkAnswer(ctx: Context, next: () => any) {
@@ -28,7 +28,8 @@ export async function checkAnswer(ctx: Context, next: () => any) {
             user.balance = user.balance + addValue
             user.multiplier = user.multiplier + 1
             console.log(`Add ${addValue} to ${user.id} for right answer (now ${user.balance})`)
-            // TODO: ctx.reply('Add value')
+            let payload = { score: addValue, balance: user.balance }
+            ctx.telegram.sendMessage(ctx.dbuser.id, ctx.i18n.t('success_pay_for_answer', payload))
         } else {
             user.multiplier = 0
         }

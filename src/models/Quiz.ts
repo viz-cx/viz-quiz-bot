@@ -36,3 +36,7 @@ export async function findUnasweredQuizzes(answeredIds: mongoose.Types.ObjectId[
         { $sample: { size: 10 } }
     ])
 }
+
+export async function getQuizCount() {
+    return await QuizModel.countDocuments().exec()
+}

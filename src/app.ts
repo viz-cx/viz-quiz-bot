@@ -35,7 +35,7 @@ bot.action(localeActions, setLanguage)
 bot.catch(console.error)
 // Hears
 bot.hears(new RegExp('🧠 .*'), async ctx => sendQuiz(ctx))
-bot.hears(new RegExp('🏆 .*'), async ctx => sendResults(ctx))
+bot.hears(new RegExp('🏦 .*'), async ctx => sendResults(ctx))
 // Start bot
 bot.launch().then(() => {
   console.info(`Bot ${bot.botInfo.username} is up and running`)
