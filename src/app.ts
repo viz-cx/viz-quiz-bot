@@ -7,7 +7,7 @@ dotenv.config({ path: `${__dirname}/../.env` })
 // Dependencies
 import { bot } from '@/helpers/bot'
 import { ignoreOldMessageUpdates } from '@/middlewares/ignoreOldMessageUpdates'
-import { sendStart } from '@/handlers/sendStart'
+import { setupStart } from '@/handlers/setupStart'
 import { i18n, attachI18N } from '@/helpers/i18n'
 import { setLanguage, sendLanguage } from '@/handlers/language'
 import { attachUser } from '@/middlewares/attachUser'
@@ -27,7 +27,7 @@ bot.use(nextQuestionCallback)
 bot.use(approveQuiz)
 bot.use(proposeQuiz)
 // Commands
-bot.command('start', sendStart)
+bot.start(setupStart)
 bot.command('language', sendLanguage)
 // Actions
 bot.action(localeActions, setLanguage)

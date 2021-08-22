@@ -1,4 +1,3 @@
-import { getQuizCount } from "../models/Quiz"
 import { Context } from "telegraf"
 
 export async function sendResults(ctx: Context) {
