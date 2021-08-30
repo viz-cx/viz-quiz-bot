@@ -17,6 +17,7 @@ import { checkAnswer } from '@/middlewares/checkAnswer'
 import { nextQuestionCallback } from '@/middlewares/nextQuestionCallback'
 import { approveQuiz } from '@/middlewares/approveQuiz'
 import { proposeQuiz } from './middlewares/proposeQuiz'
+import { startUnstaking } from './unstake'
 
 // Middlewares
 bot.use(ignoreOldMessageUpdates)
@@ -39,4 +40,5 @@ bot.hears(new RegExp('🏦 .*'), async ctx => sendResults(ctx))
 // Start bot
 bot.launch().then(() => {
   console.info(`Bot ${bot.botInfo.username} is up and running`)
+  startUnstaking()
 })
