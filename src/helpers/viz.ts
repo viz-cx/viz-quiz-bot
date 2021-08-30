@@ -28,13 +28,7 @@ export class VIZ {
         return this.transferToVesting(wif, from, to, stringAmount)
     }
 
-    public makeAward(receiver: string, memo: string, energy: number, referrer: string = null, account: any) {
-        const from = process.env.ACCOUNT
-        const wif = process.env.WIF
-        return this.award(receiver, from, wif, energy, memo, referrer, account)
-    }
-
-    private award(receiver: string, from: string, wif: string, energy: number, memo: string, referrer: string, account: any) {
+    public award(receiver: string, from: string, wif: string, energy: number, memo: string, referrer: string, account: any) {
         return new Promise((resolve, reject) => {
             var custom_sequence = 0
             var beneficiaries = []
@@ -91,10 +85,8 @@ export class VIZ {
         })
     }
 
-    public unstakeExcessShares() {
+    public unstakeExcessShares(from: string, wif: string) {
         return new Promise((resolve, reject) => {
-            const from = process.env.ACCOUNT
-            const wif = process.env.WIF
             this.getAccount(from)
                 .then(
                     account => {
@@ -108,7 +100,6 @@ export class VIZ {
                 )
                 .catch(err => reject(err))
         })
-
     }
 
     private unstake(wif: string, username: string, shares: string) {
