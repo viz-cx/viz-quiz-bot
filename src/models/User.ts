@@ -49,3 +49,13 @@ export async function findUserByPollId(pollId: string) {
   let user = await UserModel.findOne({ pollId: pollId })
   return user
 }
+
+export async function getAllBalances(): Promise<number> {
+  const result = await UserModel.aggregate([
+    { $group: { _id: null, sum: { $sum: "$balance" } } }
+  ]).exec()
+  if (result.length === 0) {
+    return 0
+  }
+  return parseFloat(result[0]["sum"])
+}

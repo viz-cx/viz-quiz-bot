@@ -13,9 +13,7 @@ results_button: Вывести
 results: |
   Текущий баланс: ${balance} баллов (<b>≈${viz} Ƶ</b>)
 
-  Напиши мне свой логин <a href="https://reg.readdle.me/?set_lang=ru">в блокчейне VIZ</a> 
-
-  [кнопка отмены]
+  ${withdrowalable ? 'Напиши мне свой логин <a href="https://reg.readdle.me/?set_lang=ru">в блокчейне VIZ</a>' : ''}
 no_unanswered_quizzes: Закончились неотвеченные квизы, попробуйте завтра
 not_quiz: Это не квиз!
 to_moderation: Квиз отправлен на модерацию

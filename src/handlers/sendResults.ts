@@ -1,12 +1,22 @@
+import { VIZ } from "@/helpers/viz"
+import { getAllBalances } from "@/models"
 import { Context } from "telegraf"
 
+const viz = new VIZ()
+
 export async function sendResults(ctx: Context) {
-    let price = 0.01 // TODO: common account viz / all balances
+    const account = process.env.ACCOUNT
+    let user = await viz.getAccount(account)
+    let allVIZes = parseFloat(user['balance'])
+    let allBalances = await getAllBalances()
+    let price = allVIZes / allBalances
+    let userVIZes = ctx.dbuser.balance * price
+    let withdrowalable = userVIZes > 11
     let payload = {
         balance: ctx.dbuser.balance,
-        viz: ctx.dbuser.balance * price
-    }
-    // if (balance < 100) { написать недостаточный баланс для вывода } 
+        viz: userVIZes,
+        withdrowalable: withdrowalable
+    } 
     ctx.reply(ctx.i18n.t('results', payload),
         { parse_mode: 'HTML', disable_web_page_preview: true })
 }
