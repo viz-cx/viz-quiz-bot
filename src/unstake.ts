@@ -13,7 +13,8 @@ export function startUnstaking() {
 function unstake() {
     const from = process.env.ACCOUNT
     const wif = process.env.WIF
-    viz.unstakeExcessShares(from, wif)
+    const fixedBalance = parseFloat(process.env.BALANCE)
+    viz.unstakeExcessShares(from, wif, fixedBalance)
         .then(result => console.log(result['operations'][0][1]))
         .catch(_ => console.error("Unsuccessful vesting withdrawal!"))
 }

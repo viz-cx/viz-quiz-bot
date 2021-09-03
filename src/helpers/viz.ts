@@ -85,12 +85,12 @@ export class VIZ {
         })
     }
 
-    public unstakeExcessShares(from: string, wif: string) {
+    public unstakeExcessShares(from: string, wif: string, fixedBalance: number) {
         return new Promise((resolve, reject) => {
             this.getAccount(from)
                 .then(
                     account => {
-                        const amount = parseFloat(account['vesting_shares'])
+                        const amount = parseFloat(account['vesting_shares']) - fixedBalance
                         const shares = `${amount.toFixed(6)} SHARES`
                         this.unstake(wif, from, shares)
                             .then(unstakeResult => resolve(unstakeResult),
