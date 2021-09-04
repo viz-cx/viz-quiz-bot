@@ -23,22 +23,14 @@ export async function sendResults(ctx: Context) {
         viz: userVIZes,
         withdrowalable: withdrowalable
     }
-    let extra: ExtraReplyMessage
-    if (withdrowalable) {
-        let markup = Markup.inlineKeyboard([
-            Markup.button.callback('💰 ' + ctx.i18n.t('withdrowal'), '💰', false)
-        ]).reply_markup
-        extra = {
-            parse_mode: 'HTML',
-            disable_web_page_preview: true,
-            reply_markup: markup
-        }
-        ctx.reply(ctx.i18n.t('results', payload), extra)
-    } else {
-        extra = {
-            parse_mode: 'HTML',
-            disable_web_page_preview: true
-        }
-        ctx.reply(ctx.i18n.t('results', payload), extra)
+    let hideButton = !withdrowalable
+    let markup = Markup.inlineKeyboard([
+        Markup.button.callback('💰 ' + ctx.i18n.t('withdrowal'), '💰', hideButton)
+    ]).reply_markup
+    let extra: ExtraReplyMessage = {
+        parse_mode: 'HTML',
+        disable_web_page_preview: true,
+        reply_markup: markup
     }
+    ctx.reply(ctx.i18n.t('results', payload), extra)
 }
