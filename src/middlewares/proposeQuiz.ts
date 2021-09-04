@@ -7,6 +7,9 @@ export async function proposeQuiz(ctx: Context, next: () => any) {
     // if (ctx.chat.id === adminID) { // ignore messages from admin
     //     return next()
     // }
+    if (ctx.message === undefined) {
+        return next()
+    }
     let poll = (ctx.message as any).poll as Poll
     if (poll !== undefined) {
         if (poll.type !== 'quiz') {

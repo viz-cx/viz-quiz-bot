@@ -13,11 +13,13 @@ results_button: Вывести
 results: |
   Текущий баланс: ${balance} баллов (<b>≈${viz} Ƶ</b>)
 
-  ${withdrowalable ? 'Напиши мне свой логин <a href="https://reg.readdle.me/?set_lang=ru">в блокчейне VIZ</a>' : ''}
+  ${withdrowalable ? '' : 'Создание чека доступно от 10 Ƶ'}
+not_enough: Недостаточный баланс VIZ для создания чека
 no_unanswered_quizzes: Закончились неотвеченные квизы, попробуйте завтра
 not_quiz: Это не квиз!
 to_moderation: Квиз отправлен на модерацию
 already_added: Этот квиз уже был добавлен
+withdrowal: Создать VIZ-чек
 success_added: Квиз успешно добавлен
 success_pay_for_quiz: Вы получаете ${score} баллов за добавление квиза. Всего ${balance}
 success_pay_for_answer: Вы получаете ${score} баллов за правильный ответ. Всего ${balance}

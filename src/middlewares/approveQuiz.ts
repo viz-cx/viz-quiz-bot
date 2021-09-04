@@ -8,6 +8,9 @@ export function approveQuiz(ctx: Context, next: () => any) {
     if (ctx.chat.id !== adminID) {
         return next()
     }
+    if (ctx.message === undefined) {
+        return next()
+    }
     let poll = (ctx.message as any).poll as Poll
     let author = (ctx.message as any).forward_from as User
     if (poll !== undefined && author !== undefined) {

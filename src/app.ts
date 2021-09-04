@@ -19,6 +19,7 @@ import { approveQuiz } from '@/middlewares/approveQuiz'
 import { proposeQuiz } from './middlewares/proposeQuiz'
 import { startUnstaking } from './unstake'
 import { startSelfAwarding } from './selfAward'
+import { makeWidthdrowal } from './handlers/widthdrowal'
 
 // Middlewares
 bot.use(ignoreOldMessageUpdates)
@@ -33,6 +34,7 @@ bot.start(setupStart)
 bot.command('language', sendLanguage)
 // Actions
 bot.action(localeActions, setLanguage)
+bot.action('💰', makeWidthdrowal)
 // Errors
 bot.catch(console.error)
 // Hears
