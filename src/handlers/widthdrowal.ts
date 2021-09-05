@@ -22,13 +22,12 @@ export async function makeCheque(ctx: Context) {
         return
     }
     let u = ctx.dbuser
-    const savedBalance: number = u.balance
     u.balance = 0
     u.save().then(async u => {
         ctx.deleteMessage(ctx.callbackQuery.message.message_id)
         const account = process.env.ACCOUNT
         const wif = process.env.WIF
-        const amount = '' + savedBalance.toFixed(3) + ' VIZ'
+        const amount = '' + userVIZes.toFixed(3) + ' VIZ'
         const privateKey = viz.generateWif()
         const publicKey = viz.wifToPublic(privateKey)
         await viz.createInvite(wif, account, amount, publicKey)
