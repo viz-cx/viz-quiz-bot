@@ -21,6 +21,7 @@ export function approveQuiz(ctx: Context, next: () => any) {
         let quiz = new QuizModel()
         quiz.question = poll.question
         let answers: string[] = []
+        console.log(poll)
         for (let i = 0; i < poll.options.length; i++) {
             let answer = poll.options[i].text
             if (i === poll.correct_option_id) {
