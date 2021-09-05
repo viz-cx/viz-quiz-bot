@@ -31,11 +31,16 @@ export async function makeCheque(ctx: Context) {
         const privateKey = viz.generateWif()
         const publicKey = viz.wifToPublic(privateKey)
         await viz.createInvite(wif, account, amount, publicKey)
-            .catch(_ => console.log('Failed to create invite for', u.id, 'with', amount, 'VIZ'))
-        await ctx.replyWithHTML(ctx.i18n.t('cheque', {
-            viz: userVIZes.toFixed(3),
-            code: privateKey
-        }), { disable_web_page_preview: true })
-        console.log('Successfully created cheque', privateKey, 'with balance', amount, 'for user', u.id)
+            .then(_ => {
+                ctx.replyWithHTML(ctx.i18n.t('cheque', {
+                    viz: userVIZes.toFixed(3),
+                    code: privateKey
+                }), { disable_web_page_preview: true })
+                console.log('Successfully created cheque', privateKey, 'with balance', amount, 'for user', u.id)
+            })
+            .catch(_ => {
+                ctx.reply(ctx.i18n.t('something_wrong'))
+                console.log('Failed to create invite for', u.id, 'with', amount, 'VIZ')
+            })
     })
 }
