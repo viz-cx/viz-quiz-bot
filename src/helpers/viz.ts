@@ -68,6 +68,22 @@ export class VIZ {
         })
     }
 
+    public generateWif(): string {
+        let length = 100
+        let charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+-=_:;.,@!^&*$'
+        let ret = ''
+        for (var i = 0, n = charset.length; i < length; ++i) {
+            ret += charset.charAt(Math.floor(Math.random() * n))
+        }
+        let wif = VIZ.vizJS.auth.toWif('', ret, '')
+        return wif
+    }
+
+    public wifToPublic(wif: string): string {
+        let publicKey = VIZ.vizJS.auth.wifToPublic(wif)
+        return publicKey
+    }
+
     public getAccount(login: string): Promise<Object> {
         return new Promise((resolve, reject) => {
             VIZ.vizJS.api.getAccounts([login], function (err, result) {
@@ -115,6 +131,18 @@ export class VIZ {
                         resolve(result)
                     }
                 })
+        })
+    }
+
+    public createInvite(wif: string, creator: string, balance: string, invite_key: string): Promise<Object> {
+        return new Promise((resolve, reject) => {
+            VIZ.vizJS.broadcast.createInvite(wif, creator, balance, invite_key, function (err, result) {
+                if (err) {
+                    reject(err)
+                } else {
+                    resolve(result)
+                }
+            })
         })
     }
 

@@ -24,3 +24,7 @@ success_added: Квиз успешно добавлен
 success_pay_for_quiz: Вы получаете ${score} баллов за добавление квиза. Всего ${balance}
 success_pay_for_answer: Вы получаете ${score} баллов за правильный ответ. Всего ${balance}
 success_pay_referral: Вы получаете ${score} баллов за приглашение. Всего ${balance}
+cheque: |
+  Выписан чек на ${viz} viz, код погашения <code>${code}</code>
+
+  Его можно использовать <a href="https://start.viz.plus/?set_lang=ru">при регистрации аккаунта</a> или <a href="https://my.viz.plus/assets/checks/">погасить на баланс существующего</a>
