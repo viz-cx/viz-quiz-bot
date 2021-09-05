@@ -24,7 +24,7 @@ export function approveQuiz(ctx: Context, next: () => any) {
         for (let i = 0; i < poll.options.length; i++) {
             let answer = poll.options[i].text
             if (i === poll.correct_option_id) {
-                answers.unshift(answer)
+                answers = [answer, ...answers]
             } else {
                 answers.push(answer)
             }
