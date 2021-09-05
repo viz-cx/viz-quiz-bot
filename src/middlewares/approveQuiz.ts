@@ -25,8 +25,9 @@ export function approveQuiz(ctx: Context, next: () => any) {
             let answer = poll.options[i].text
             if (i === poll.correct_option_id) {
                 answers = [answer, ...answers]
+                console.log('Correct option', i, poll.correct_option_id)
             } else {
-                answers.push(answer)
+                answers = [...answers, answer]
             }
         }
         console.log(answers)
