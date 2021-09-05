@@ -52,7 +52,7 @@ function mainKeyboard(language: string) {
 function payToReferrer(referrerId: number, ctx: Context) {
     findUser(referrerId)
         .then(user => {
-            let add = 100
+            let add = 200
             user.balance = user.balance + add
             user.save()
                 .then(u => {

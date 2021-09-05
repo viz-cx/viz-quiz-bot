@@ -53,10 +53,10 @@ export function approveQuiz(ctx: Context, next: () => any) {
 function payToAuthor(authorId: number, ctx: Context) {
     findUser(authorId)
         .then(author => {
-            author.balance = author.balance + 100
+            author.balance = author.balance + 200
             author.save()
                 .then(author => {
-                    let payload = { score: 100, balance: author.balance }
+                    let payload = { score: 200, balance: author.balance }
                     ctx.telegram.sendMessage(author.id, ctx.i18n.t('success_pay_for_quiz', payload))
                 })
         })
