@@ -53,6 +53,7 @@ export function approveQuiz(ctx: Context, next: () => any) {
 function payToAuthor(authorId: number, ctx: Context) {
     findUser(authorId)
         .then(author => {
+            if (!author) { return }
             author.balance = author.balance + 200
             author.save()
                 .then(author => {
