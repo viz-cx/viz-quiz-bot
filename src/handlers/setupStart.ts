@@ -1,24 +1,31 @@
-import { findUser, User } from "@/models/User"
+import { findUser } from "@/models/User"
 import { Context, Markup as m } from "telegraf"
 import { i18n } from "@/helpers/i18n"
-import { DocumentType } from "@typegoose/typegoose/lib/types"
 
 export function setupStart(ctx: Context) {
     const payload: string = (ctx as any)['startPayload']
     const referrer = parseInt(payload)
     var user = ctx.dbuser
-    if (!user.referrer && !isNaN(referrer) && user.id !== referrer) {
-        findUser(referrer)
-            .then(result => {
-                if (result) {
-                    console.log("Add referrer", referrer, "to user", referrer)
-                    user.referrer = referrer
-                    user.save().then((u: DocumentType<User>) => payToReferrer(u.id, ctx))
-                } else {
-                    console.log('Referrer', referrer, 'doesn\'t exists')
-                }
-            }, err => console.log('Referrer error', referrer, err)
-            )
+    if (!user.referrer && !isNaN(referrer)) {
+        if (user.id !== referrer) {
+            findUser(referrer)
+                .then(result => {
+                    if (result) {
+                        console.log("Add referrer", referrer, "to user", referrer)
+                        user.referrer = referrer
+                        user.save().then(u => {
+                            payToReferrer(referrer, ctx)
+                            payToReferrer(u.id, ctx)
+                        })
+                    } else {
+                        console.log('Referrer', referrer, 'doesn\'t exists')
+                    }
+                }, err => console.log('Referrer error', referrer, err)
+                )
+        }
+    } else {
+        user.referrer = 1
+        user.save()
     }
     return sendMainKeyboard(ctx)
 }
