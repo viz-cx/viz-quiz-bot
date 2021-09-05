@@ -5,7 +5,7 @@ export class Quiz extends Base<mongoose.Schema.Type.String> {
     @prop()
     question: string
 
-    @prop({ type: String })
+    @prop({ type: () => [String], index: true })
     answers: string[] // first is correct
 
     @prop({ required: false })

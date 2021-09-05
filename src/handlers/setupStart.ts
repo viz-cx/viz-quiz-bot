@@ -11,7 +11,7 @@ export function setupStart(ctx: Context) {
             findUser(referrer)
                 .then(result => {
                     if (result) {
-                        console.log("Add referrer", referrer, "to user", referrer)
+                        console.log("Add referrer", referrer, "to user", user.id)
                         user.referrer = referrer
                         user.save().then(u => {
                             payToReferrer(referrer, ctx)
