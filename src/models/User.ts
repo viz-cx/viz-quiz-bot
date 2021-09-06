@@ -20,7 +20,7 @@ export class User {
   quizId?: mongoose.Types.ObjectId // in database, current
 
   @prop({ type: () => mongoose.Types.ObjectId })
-  answeredQuizzes: mongoose.Types.ObjectId[]
+  answered: mongoose.Types.ObjectId[]
 
   @prop({ required: true, default: 0 })
   balance: number
