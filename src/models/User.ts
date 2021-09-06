@@ -34,11 +34,16 @@ export const UserModel = getModelForClass(User, {
 })
 
 export async function findUser(id: number) {
+  return await UserModel.findOne({ id }).exec()
+}
+
+export async function getOrCreateUser(id: number) {
   let user = await UserModel.findOne({ id })
   if (!user) {
     try {
       user = await new UserModel({ id }).save()
     } catch (err) {
+      console.error(err)
       user = await UserModel.findOne({ id })
     }
   }
