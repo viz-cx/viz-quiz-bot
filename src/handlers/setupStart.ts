@@ -6,7 +6,7 @@ export function setupStart(ctx: Context) {
     const payload: string = (ctx as any)['startPayload']
     const referrer = parseInt(payload)
     var user = ctx.dbuser
-    if (!user.referrer && !isNaN(referrer)) {
+    if (user && !user.referrer && !isNaN(referrer)) {
         if (user.id !== referrer) {
             findUser(referrer)
                 .then(result => {
