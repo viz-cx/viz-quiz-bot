@@ -30,7 +30,6 @@ bot.use(nextQuestionCallback)
 bot.use(approveQuiz)
 bot.use(proposeQuiz)
 // Commands
-bot.start(setupStart)
 bot.command('language', sendLanguage)
 // Actions
 bot.action(localeActions, setLanguage)
@@ -41,6 +40,7 @@ bot.catch(console.error)
 bot.hears(new RegExp('🧠 .*'), async ctx => sendQuiz(ctx))
 bot.hears(new RegExp('🏦 .*'), async ctx => sendResults(ctx))
 // Start bot
+setupStart(bot)
 bot.launch().then(() => {
   console.info(`Bot ${bot.botInfo.username} is up and running`)
   startSelfAwarding()

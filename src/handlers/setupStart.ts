@@ -1,33 +1,39 @@
 import { findUser } from "@/models/User"
-import { Context, Markup as m } from "telegraf"
+import { Context, Markup as m, Telegraf } from "telegraf"
 import { i18n } from "@/helpers/i18n"
 
-export function setupStart(ctx: Context) {
-    const payload: string = (ctx as any)['startPayload']
-    const referrer = parseInt(payload)
-    var user = ctx.dbuser
-    if (user && !user.referrer && !isNaN(referrer)) {
-        if (user.id !== referrer) {
-            findUser(referrer)
-                .then(result => {
-                    if (result) {
-                        console.log("Add referrer", referrer, "to user", user.id)
-                        user.referrer = referrer
-                        user.save().then(u => {
-                            payToReferrer(referrer, ctx)
-                            payToReferrer(u.id, ctx)
-                        })
-                    } else {
-                        console.log('Referrer', referrer, 'doesn\'t exists')
-                    }
-                }, err => console.log('Referrer error', referrer, err)
-                )
+export function setupStart(bot: Telegraf<Context>) {
+    bot.start((ctx) => {
+        const payload: string = (ctx as any)['startPayload']
+        const referrer = parseInt(payload)
+        var user = ctx.dbuser
+        if (!user) {
+            console.log('User not found!')
+            return sendMainKeyboard(ctx)
         }
-    } else {
-        user.referrer = 1
-        user.save()
-    }
-    return sendMainKeyboard(ctx)
+        if (!user.referrer && !isNaN(referrer)) {
+            if (user.id !== referrer) {
+                findUser(referrer)
+                    .then(result => {
+                        if (result) {
+                            console.log("Add referrer", referrer, "to user", user.id)
+                            user.referrer = referrer
+                            user.save().then(u => {
+                                payToReferrer(referrer, ctx)
+                                payToReferrer(u.id, ctx)
+                            })
+                        } else {
+                            console.log('Referrer', referrer, 'doesn\'t exists')
+                        }
+                    }, err => console.log('Referrer error', referrer, err)
+                    )
+            }
+        } else {
+            user.referrer = 1
+            user.save()
+        }
+        return sendMainKeyboard(ctx)
+    })
 }
 
 export function sendMainKeyboard(ctx: Context) {
