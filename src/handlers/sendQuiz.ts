@@ -4,7 +4,7 @@ import { nextQuestionKeyboard } from "@/middlewares/checkAnswer"
 
 export async function sendQuiz(ctx: Context) {
     deletePreviousMessage(ctx)
-    let answeredQuizzes = ctx.dbuser.answeredQuizzes
+    let answeredQuizzes = ctx.dbuser.answered
     if (answeredQuizzes === null) {
         answeredQuizzes = []
     }
