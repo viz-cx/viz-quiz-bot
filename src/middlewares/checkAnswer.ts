@@ -33,7 +33,7 @@ export async function checkAnswer(ctx: Context, next: () => any) {
         } else {
             user.multiplier = 0
         }
-        user.answeredQuizzes.push(user.quizId)
+        user.answered.push(user.quizId)
         user.quizId = null
         user.save()
         setTimeout(() => addNextQuestionButton(ctx), 2000)
