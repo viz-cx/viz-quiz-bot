@@ -22,9 +22,14 @@ to_moderation: Квиз отправлен на модерацию
 already_added: Этот квиз уже был добавлен
 withdrowal: Создать VIZ-чек
 success_added: Квиз успешно добавлен
-success_pay_for_quiz: Вы получаете ${score} баллов за добавление квиза. Всего ${balance}
-success_pay_for_answer: Вы получаете ${score} баллов за правильный ответ. Всего ${balance}
-success_pay_referral: Вы получаете ${score} баллов за приглашение. Всего ${balance}
+success_pay_for_quiz: |
+  Вы получаете ${score} баллов за добавление квиза. Активный баланс: ${balance}
+success_pay_for_answer: |
+  Вы получаете ${score} баллов за правильный ответ. Активный баланс: ${balance}
+success_pay_referral: |
+  Вы получаете ${score} баллов за активацию реферальной ссылки. Активный баланс: ${balance}
+success_pay_referrer: |
+  Вы получаете ${score} баллов за приглашение. Активный баланс: ${balance}
 cheque: |
   Выписан чек на ${viz} viz, код погашения <code>${code}</code>
 

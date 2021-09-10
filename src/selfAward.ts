@@ -5,7 +5,6 @@ const viz = new VIZ()
 export function startSelfAwarding() {
     const hours = 5
     setTimeout(() => {
-        console.log("Start self awarding")
         makeSelfAward()
         startSelfAwarding()
     }, 1000 * 60 * 60 * hours)

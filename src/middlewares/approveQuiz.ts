@@ -34,7 +34,6 @@ export function approveQuiz(ctx: Context, next: () => any) {
                 answers = [...answers, answer]
             }
         }
-        console.log(answers)
         quiz.answers = answers
         quiz.explanation = poll.explanation // TODO: explanation_entities
         quiz.authorId = author.id

@@ -20,7 +20,7 @@ export function setupStart(bot: Telegraf<Context>) {
                             user.referrer = referrer
                             user.save().then(u => {
                                 payToReferrer(referrer, ctx)
-                                payToReferrer(u.id, ctx)
+                                payToReferral(u.id, ctx)
                             })
                         } else {
                             console.log('Referrer', referrer, 'doesn\'t exists')
@@ -57,6 +57,19 @@ function mainKeyboard(language: string) {
 
 function payToReferrer(referrerId: number, ctx: Context) {
     findUser(referrerId)
+        .then(user => {
+            let add = 200
+            user.balance = user.balance + add
+            user.save()
+                .then(u => {
+                    let payload = { score: add, balance: u.balance }
+                    ctx.telegram.sendMessage(u.id, ctx.i18n.t('success_pay_referrer', payload))
+                })
+        })
+}
+
+function payToReferral(referralId: number, ctx: Context) {
+    findUser(referralId)
         .then(user => {
             let add = 200
             user.balance = user.balance + add
