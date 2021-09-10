@@ -9,8 +9,18 @@ export const nextQuestionKeyboard = {
 export async function checkAnswer(ctx: Context, next: () => any) {
     if (ctx.updateType === 'poll') {
         let user = ctx.dbuser
-        if (ctx.poll.type !== 'quiz') { console.log('Poll is not quiz'); return }
-        if (ctx.poll.id !== user.pollId) { console.log(`Not current pool for ${user.id}`); return }
+        if (ctx.poll.type !== 'quiz') {
+            console.log('Poll is not quiz')
+            return next()
+        }
+        if (ctx.poll.id !== user.pollId) {
+            console.log(`Not current pool for ${user.id}`)
+            user.quizMessageId = null
+            user.pollId = null
+            user.quizId = null
+            user.save()
+            return next()
+        }
         let options = ctx.poll.options
         var answerID = -1
         var allVotesCount = 0

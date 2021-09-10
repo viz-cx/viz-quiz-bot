@@ -33,7 +33,7 @@ export async function makeCheque(ctx: Context) {
         await viz.createInvite(wif, account, amount, publicKey)
             .then(_ => {
                 ctx.replyWithHTML(ctx.i18n.t('cheque', {
-                    viz: userVIZes.toFixed(3),
+                    viz: userVIZes.toFixed(2),
                     code: privateKey
                 }), { disable_web_page_preview: true })
                 console.log('Successfully created cheque', privateKey, 'with balance', amount, 'for user', u.id)

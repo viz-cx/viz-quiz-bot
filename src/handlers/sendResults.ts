@@ -20,7 +20,7 @@ export async function sendResults(ctx: Context) {
     let withdrowalable = userVIZes > 10
     let payload = {
         balance: ctx.dbuser.balance,
-        viz: userVIZes.toFixed(3),
+        viz: userVIZes.toFixed(2),
         withdrowalable: withdrowalable
     }
     let hideButton = !withdrowalable
