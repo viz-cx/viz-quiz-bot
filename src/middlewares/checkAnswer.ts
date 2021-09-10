@@ -1,5 +1,3 @@
-import { User, UserModel } from '@/models/User'
-import { DocumentType } from '@typegoose/typegoose'
 import { Context } from 'telegraf'
 
 export const nextQuestionKeyboard = {
@@ -7,6 +5,9 @@ export const nextQuestionKeyboard = {
 }
 
 export async function checkAnswer(ctx: Context, next: () => any) {
+    if (ctx.dbuser && ctx.dbuser.id === 930884212) {
+        console.log(ctx)
+    }
     if (ctx.updateType === 'poll') {
         let user = ctx.dbuser
         if (ctx.poll.type !== 'quiz') {
