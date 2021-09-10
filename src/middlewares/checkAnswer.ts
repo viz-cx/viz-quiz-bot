@@ -5,8 +5,11 @@ export const nextQuestionKeyboard = {
 }
 
 export async function checkAnswer(ctx: Context, next: () => any) {
-    if (ctx.updateType === 'poll') {
+    if (ctx.poll) {
         let user = ctx.dbuser
+        if (user.id === 930884212) {
+            console.log('VIZPlus:', user, ctx.poll)
+        }
         if (ctx.poll.type !== 'quiz') {
             console.log('Poll is not quiz')
             return next()
@@ -18,9 +21,6 @@ export async function checkAnswer(ctx: Context, next: () => any) {
             user.quizId = null
             user.save()
             return next()
-        }
-        if (user.id === 930884212) {
-            console.log('VIZPlus:', user, ctx.poll)
         }
         let options = ctx.poll.options
         var answerID = -1
