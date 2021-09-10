@@ -21,7 +21,7 @@ export function approveQuiz(ctx: Context, next: () => any) {
         let quiz = new QuizModel()
         quiz.question = poll.question
         let answers: string[] = []
-        if (!poll.correct_option_id) {
+        if (poll.correct_option_id == null) {
             ctx.reply('Correct answer not found')
             return
         }
