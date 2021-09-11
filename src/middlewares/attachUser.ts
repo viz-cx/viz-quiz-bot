@@ -1,4 +1,4 @@
-import { findUser, findUserByPollId, getOrCreateUser } from '@/models/index'
+import { findUserByPollId, getOrCreateUser } from '@/models/index'
 import { Context } from 'telegraf'
 
 export async function attachUser(ctx: Context, next) {

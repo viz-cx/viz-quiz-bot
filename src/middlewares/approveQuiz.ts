@@ -1,7 +1,7 @@
 import { Context } from 'telegraf'
 import { Poll } from 'telegraf/typings/core/types/typegram'
 import { QuizModel } from '@/models/Quiz'
-import { findUser, User } from '@/models'
+import { addToBalance, findUser, User } from '@/models'
 
 export function approveQuiz(ctx: Context, next: () => any) {
     const adminID = parseInt(process.env.ADMIN_TELEGRAM_ID)
@@ -29,7 +29,6 @@ export function approveQuiz(ctx: Context, next: () => any) {
             let answer = poll.options[i].text
             if (i === poll.correct_option_id) {
                 answers = [answer, ...answers]
-                console.log('Correct option', i, poll.correct_option_id)
             } else {
                 answers = [...answers, answer]
             }
@@ -56,13 +55,12 @@ export function approveQuiz(ctx: Context, next: () => any) {
 }
 
 function payToAuthor(authorId: number, ctx: Context) {
-    findUser(authorId)
-        .then(author => {
-            if (!author) { return }
-            author.balance = author.balance + 200
-            author.save()
+    let add = 500
+    addToBalance(authorId, add)
+        .then(_ => {
+            findUser(authorId)
                 .then(author => {
-                    let payload = { score: 200, balance: author.balance }
+                    let payload = { score: add, balance: author.balance }
                     ctx.telegram.sendMessage(author.id, ctx.i18n.t('success_pay_for_quiz', payload))
                 })
         })

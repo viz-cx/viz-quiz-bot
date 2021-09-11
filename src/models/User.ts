@@ -64,3 +64,12 @@ export async function getAllBalances(): Promise<number> {
   }
   return parseFloat(result[0]["sum"])
 }
+
+export async function addToBalance(userId: number, add: number) {
+  await UserModel.updateOne(
+    { id: userId },
+    {
+      $inc: { balance: add }
+    }, { upsert: true }
+  ).exec()
+}

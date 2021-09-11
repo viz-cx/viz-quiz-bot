@@ -1,4 +1,4 @@
-import { findUser } from "@/models/User"
+import { addToBalance, findUser } from "@/models/User"
 import { Context, Markup as m, Telegraf } from "telegraf"
 import { i18n } from "@/helpers/i18n"
 
@@ -56,24 +56,22 @@ function mainKeyboard(language: string) {
 }
 
 function payToReferrer(referrerId: number, ctx: Context) {
-    findUser(referrerId)
-        .then(user => {
-            let add = 200
-            user.balance = user.balance + add
-            user.save()
-                .then(u => {
-                    let payload = { score: add, balance: u.balance }
-                    ctx.telegram.sendMessage(u.id, ctx.i18n.t('success_pay_referrer', payload))
-                })
+    let add = 200
+    addToBalance(referrerId, add)
+        .then(_ => {
+            findUser(referrerId).then(u => {
+                let payload = { score: add, balance: u.balance }
+                ctx.telegram.sendMessage(u.id, ctx.i18n.t('success_pay_referrer', payload))
+            })
         })
+
 }
 
 function payToReferral(referralId: number, ctx: Context) {
-    findUser(referralId)
-        .then(user => {
-            let add = 200
-            user.balance = user.balance + add
-            user.save()
+    let add = 200
+    addToBalance(referralId, add)
+        .then(_ => {
+            findUser(referralId)
                 .then(u => {
                     let payload = { score: add, balance: u.balance }
                     ctx.telegram.sendMessage(u.id, ctx.i18n.t('success_pay_referral', payload))
