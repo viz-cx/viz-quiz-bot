@@ -73,3 +73,7 @@ export async function addToBalance(userId: number, add: number) {
     }, { upsert: true }
   ).exec()
 }
+
+export async function getUsersCount(afterDate: Date = new Date(0)) {
+  return await UserModel.countDocuments({ updatedAt: { $gt: afterDate } }).exec()
+}

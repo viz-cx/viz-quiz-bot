@@ -20,6 +20,7 @@ import { proposeQuiz } from './middlewares/proposeQuiz'
 import { startUnstaking } from './unstake'
 import { startSelfAwarding } from './selfAward'
 import { makeCheque } from './handlers/widthdrowal'
+import { sendStats } from './handlers/sendStats'
 
 // Middlewares
 bot.use(ignoreOldMessageUpdates)
@@ -31,6 +32,7 @@ bot.use(approveQuiz)
 bot.use(proposeQuiz)
 // Commands
 bot.command('language', sendLanguage)
+bot.command(['stats', 'stat'], sendStats)
 // Actions
 bot.action(localeActions, setLanguage)
 bot.action('💰', makeCheque)
