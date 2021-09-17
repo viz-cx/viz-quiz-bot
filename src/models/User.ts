@@ -82,5 +82,9 @@ export async function getUsersCount(afterDate: Date = new Date(0)) {
 }
 
 export async function getUsersNotifiedBefore(notificationDate: Date): Promise<DocumentType<User[]>> {
-  return await UserModel.find({ notifiedAt: { $lte: notificationDate } }).exec()
+  return await UserModel.find({
+    $or: [
+      { notifiedAt: "" }, { notifiedAt: { $lte: notificationDate } }
+    ]
+  }).exec()
 }
