@@ -24,7 +24,7 @@ async function makeNotifications() {
             while (users.length > 0) {
                 const messages: Promise<Message>[] = users.splice(0, 29)
                     .map(async user => {
-                        let unansweredCount = await getQuizCountAfterDate(new Date(0))//user.updatedAt)
+                        let unansweredCount = await getQuizCountAfterDate(user.updatedAt)
                         if (unansweredCount > notifyWhenMoreThan) {
                             user.notifiedAt = Date()
                             await user.save()
