@@ -4,12 +4,11 @@ import { i18n } from './helpers/i18n'
 import { getQuizCountAfterDate, getUsersNotifiedBefore } from './models'
 
 export function startNotifications() {
-    // const hours = 20
-    // setTimeout(() => {
-    //     makeNotifications()
-    //     startNotifications()
-    // }, 1000 * 60 * 60 * hours)
-    makeNotifications()
+    const hours = 20
+    setTimeout(() => {
+        makeNotifications()
+        startNotifications()
+    }, 1000 * 60 * 60 * hours)
 }
 
 async function makeNotifications() {
