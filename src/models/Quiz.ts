@@ -37,6 +37,6 @@ export async function findUnasweredQuizzes(answeredIds: mongoose.Types.ObjectId[
     ])
 }
 
-export async function getQuizCount() {
-    return await QuizModel.countDocuments().exec()
+export async function getQuizCountAfterDate(date: Date = new Date(0)): Promise<number> {
+    return await QuizModel.countDocuments({ createdAt: { $gte: date } }).exec()
 }

@@ -1,4 +1,4 @@
-import { getUsersCount, getQuizCount } from "@/models";
+import { getUsersCount, getQuizCountAfterDate } from "@/models";
 import { Context } from "telegraf/typings/context";
 
 
@@ -10,7 +10,7 @@ export function sendStats(ctx: Context) {
     Promise.all([
         getUsersCount(start),
         getUsersCount(prevMonth),
-        getQuizCount()
+        getQuizCountAfterDate(start)
     ]).then(results => {
         const params = {
             'all': results[0],

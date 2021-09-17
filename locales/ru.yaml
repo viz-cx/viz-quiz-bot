@@ -34,6 +34,8 @@ cheque: |
   Выписан чек на ${viz} viz, код погашения <code>${code}</code>
 
   Его можно использовать <a href="https://start.viz.plus/?set_lang=ru">при регистрации аккаунта</a> или <a href="https://my.viz.plus/assets/checks/">погасить на баланс существующего</a>
+notification: |
+  Тебя уже заждались ${count} новых квизов!
 stats: |
   Всего пользователей: ${all}
   Активных в этом месяце: ${month}

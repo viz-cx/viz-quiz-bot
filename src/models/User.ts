@@ -1,4 +1,4 @@
-import { prop, getModelForClass, mongoose } from '@typegoose/typegoose'
+import { prop, getModelForClass, mongoose, DocumentType } from '@typegoose/typegoose'
 
 export class User {
   @prop({ required: true, index: true, unique: true })
@@ -27,6 +27,9 @@ export class User {
 
   @prop({ required: true, default: 0 })
   multiplier: number
+
+  @prop({ required: true, default: new Date(0) })
+  notifiedAt: Date
 }
 
 export const UserModel = getModelForClass(User, {
@@ -76,4 +79,8 @@ export async function addToBalance(userId: number, add: number) {
 
 export async function getUsersCount(afterDate: Date = new Date(0)) {
   return await UserModel.countDocuments({ updatedAt: { $gt: afterDate } }).exec()
+}
+
+export async function getUsersNotifiedBefore(notificationDate: Date): Promise<DocumentType<User[]>> {
+  return await UserModel.find({ notifiedAt: { $lte: notificationDate } }).exec()
 }

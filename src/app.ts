@@ -21,6 +21,7 @@ import { startUnstaking } from './unstake'
 import { startSelfAwarding } from './selfAward'
 import { makeCheque } from './handlers/widthdrowal'
 import { sendStats } from './handlers/sendStats'
+import { startNotifications } from './sendNotification'
 
 // Middlewares
 bot.use(ignoreOldMessageUpdates)
@@ -47,4 +48,5 @@ bot.launch().then(() => {
   console.info(`Bot ${bot.botInfo.username} is up and running`)
   startSelfAwarding()
   startUnstaking()
+  startNotifications()
 })
