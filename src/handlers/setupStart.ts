@@ -49,7 +49,7 @@ export function sendMainKeyboard(ctx: Context) {
     })
 }
 
-function mainKeyboard(language: string) {
+export function mainKeyboard(language: string) {
     const play = m.button.callback('🧠 ' + i18n.t(language, 'quiz_button'), 'play')
     const withdrawal = m.button.callback('🏦 ' + i18n.t(language, 'results_button'), 'results')
     return m.keyboard([[play, withdrawal]]).resize()

@@ -21,7 +21,7 @@ import { startUnstaking } from './unstake'
 import { startSelfAwarding } from './selfAward'
 import { makeCheque } from './handlers/widthdrowal'
 import { sendStats } from './handlers/sendStats'
-import { startNotifications } from './sendNotification'
+import { startNotifications } from './sendNotifications'
 
 // Middlewares
 bot.use(ignoreOldMessageUpdates)

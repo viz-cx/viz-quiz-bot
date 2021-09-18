@@ -53,6 +53,14 @@ export async function getOrCreateUser(id: number) {
   return user
 }
 
+export async function updateNotifiedDate(userId: number) {
+  // directly to the MongoDB API, without Mongoose 
+  return await UserModel.collection.findOneAndUpdate(
+    { id: userId },
+    { $set: { notifiedAt: new Date() } }
+  )
+}
+
 export async function findUserByPollId(pollId: string) {
   let user = await UserModel.findOne({ pollId: pollId })
   return user
