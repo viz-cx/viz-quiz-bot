@@ -3,11 +3,10 @@ import { getAllBalances } from "@/models"
 import { Context, Markup } from "telegraf"
 import { ExtraReplyMessage } from "telegraf/typings/telegram-types"
 
-const viz = new VIZ()
-
 export async function sendResults(ctx: Context) {
     const account = process.env.ACCOUNT
-    let user = await viz.getAccount(account)
+    let user = await ctx.viz.getAccount(account)
+        .catch(_ => ctx.viz.changeNode())
     let allVIZes = parseFloat(user['balance'])
     let allBalances = await getAllBalances()
     let price: number

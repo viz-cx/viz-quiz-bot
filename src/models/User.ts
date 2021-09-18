@@ -77,7 +77,7 @@ export async function addToBalance(userId: number, add: number) {
   ).exec()
 }
 
-export async function getUsersCount(afterDate: Date = new Date(0)) {
+export async function getUsersCount(afterDate: Date = new Date(0)): Promise<number> {
   return await UserModel.countDocuments({ updatedAt: { $gt: afterDate } }).exec()
 }
 
@@ -87,4 +87,8 @@ export async function getUsersNotifiedBefore(notificationDate: Date): Promise<Do
       { notifiedAt: "" }, { notifiedAt: { $lte: notificationDate } }
     ]
   }).exec()
+}
+
+export async function getRichestUser(): Promise<DocumentType<User>> {
+  return await UserModel.findOne().sort({ "balance": -1 }).exec()
 }

@@ -1,12 +1,11 @@
-import { VIZ } from "@/helpers/viz"
 import { getAllBalances } from "@/models/User"
 import { Context } from "telegraf"
 
-const viz = new VIZ()
-
 export async function makeCheque(ctx: Context) {
+    let viz = ctx.viz
     const account = process.env.ACCOUNT
     let user = await viz.getAccount(account)
+        .catch(_ => ctx.viz.changeNode())
     let allVIZes = parseFloat(user['balance'])
     let allBalances = await getAllBalances()
     let price = allVIZes / allBalances
