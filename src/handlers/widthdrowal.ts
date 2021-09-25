@@ -22,8 +22,11 @@ export async function makeCheque(ctx: Context) {
     }
     let u = ctx.dbuser
     u.balance = 0
+    u.multiplier = 0
     u.save().then(async u => {
-        ctx.deleteMessage(ctx.callbackQuery.message.message_id)
+        try {
+            ctx.deleteMessage(ctx.callbackQuery.message.message_id)
+        } catch (_) {}
         const account = process.env.ACCOUNT
         const wif = process.env.WIF
         const amount = '' + userVIZes.toFixed(3) + ' VIZ'
