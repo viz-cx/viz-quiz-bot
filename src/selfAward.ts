@@ -3,7 +3,7 @@ import { VIZ } from "./helpers/viz"
 const viz = new VIZ()
 
 export function startSelfAwarding() {
-    const hours = 5
+    const hours = randomFromInterval(5, 50)
     setTimeout(() => {
         makeSelfAward()
         startSelfAwarding()
@@ -24,4 +24,8 @@ function makeSelfAward() {
         console.log("Make self award with energy", energy)
         viz.award(account, account, wif, energy, "", null, account).catch(_ => viz.changeNode())
     })
+}
+
+function randomFromInterval(min, max) { // min and max included 
+    return Math.floor(Math.random() * (max - min + 1) + min)
 }
