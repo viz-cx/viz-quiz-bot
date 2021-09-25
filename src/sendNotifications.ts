@@ -5,7 +5,7 @@ import { i18n } from './helpers/i18n'
 import { getQuizCountAfterDate, getUsersNotifiedBefore, updateNotifiedDate } from './models'
 
 export function startNotifications() {
-    const hours = 20
+    const hours = 72
     setTimeout(() => {
         startNotifications()
     }, 1000 * 60 * 60 * hours)
@@ -13,7 +13,7 @@ export function startNotifications() {
 }
 
 async function makeNotifications() {
-    const days = 3
+    const days = 7
     const date = new Date(new Date().getTime() - (days * 24 * 60 * 60 * 1000))
     const notifyWhenMoreThan = 10
     await getUsersNotifiedBefore(date)
@@ -21,11 +21,12 @@ async function makeNotifications() {
             var users = users
             console.log('Start sending to', users.length, 'users')
             var successCounter = 0
+            let allQuizzesCount = await getQuizCountAfterDate(new Date(0))
             while (users.length > 0) {
                 const messages: Promise<Message>[] = users.splice(0, 29)
                     .map(async user => {
                         let unansweredCount = await getQuizCountAfterDate(user.updatedAt)
-                        if (unansweredCount >= notifyWhenMoreThan) {
+                        if (unansweredCount >= notifyWhenMoreThan && unansweredCount < allQuizzesCount - 1) {
                             updateNotifiedDate(user.id)
                             return await bot.telegram.sendMessage(
                                 user.id, i18n.t(user.language, 'notification', { count: unansweredCount }), mainKeyboard(user.language))
