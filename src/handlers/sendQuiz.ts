@@ -32,16 +32,15 @@ export async function sendQuiz(ctx: Context) {
     let shuffledAnswers = shuffle(answers)
     let correctValueID = shuffledAnswers.indexOf(correctValue)
     let explanation = randomQuiz.explanation
-    // let secondsToAnswer = 10
-    let quizMsg = ctx.replyWithQuiz(question, shuffledAnswers, {
+    let secondsToAnswer = 30
+    ctx.replyWithQuiz(question, shuffledAnswers, {
         is_anonymous: true,
         allows_multiple_answers: false,
         correct_option_id: correctValueID,
         is_closed: false,
         explanation: explanation,
-        // open_period: secondsToAnswer
-    })
-    quizMsg.then(msg => {
+        open_period: secondsToAnswer
+    }).then(msg => {
         let user = ctx.dbuser
         user.pollId = msg.poll.id
         user.quizMessageId = msg.message_id
@@ -56,7 +55,7 @@ export async function deletePreviousMessage(ctx: Context) {
     if (user.quizMessageId) {
         try {
             await ctx.deleteMessage(user.quizMessageId)
-        } catch (_) {}
+        } catch (_) { }
     }
 }
 
@@ -70,4 +69,10 @@ function shuffle(array) {
         array[randomIndex] = temporaryValue
     }
     return array
+}
+
+async function closePoll(ctx: Context, message_id: number) {
+    try {
+        await ctx.stopPoll(message_id)
+    } catch (err) { console.log(err) }
 }
