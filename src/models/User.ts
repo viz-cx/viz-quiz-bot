@@ -62,8 +62,7 @@ export async function updateNotifiedDate(userId: number) {
 }
 
 export async function findUserByPollId(pollId: string) {
-  let user = await UserModel.findOne({ pollId: pollId })
-  return user
+  return await UserModel.findOne({ pollId: pollId }).exec()
 }
 
 export async function getAllBalances(): Promise<number> {

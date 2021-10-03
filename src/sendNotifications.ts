@@ -7,9 +7,9 @@ import { getQuizCountAfterDate, getUsersNotifiedBefore, updateNotifiedDate } fro
 export function startNotifications() {
     const hours = 72
     setTimeout(() => {
+        makeNotifications()
         startNotifications()
     }, 1000 * 60 * 60 * hours)
-    makeNotifications()
 }
 
 async function makeNotifications() {
