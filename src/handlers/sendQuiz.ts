@@ -56,9 +56,7 @@ export async function deletePreviousMessage(ctx: Context) {
     if (user.quizMessageId) {
         try {
             await ctx.deleteMessage(user.quizMessageId)
-        } catch (err) {
-            console.log('Message', user.quizMessageId, 'for user', user.id, 'not deleted')
-        }
+        } catch (_) {}
     }
 }
 
