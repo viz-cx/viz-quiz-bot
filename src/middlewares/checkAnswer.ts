@@ -7,7 +7,7 @@ export const nextQuestionKeyboard = {
 export async function checkAnswer(ctx: Context, next: () => any) {
     let user = ctx.dbuser
     if (user.id === 146277382) {
-        console.log('Commodore:', user, ctx.poll)
+        console.log('Commodore:', user, ctx)
     }
     if (ctx.poll) {
         if (user.id === 930884212) {
