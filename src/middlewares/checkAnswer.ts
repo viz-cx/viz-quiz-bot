@@ -9,9 +9,6 @@ export async function checkAnswer(ctx: Context, next: () => any) {
     if (user.id === 146277382) {
         console.log('Commodore:', ctx)
     }
-    if (user.id === 38968897) {
-        console.log('Babin:', ctx)
-    }
     if (user.id === 930884212) {
         console.log('VIZPlus:', ctx)
     }

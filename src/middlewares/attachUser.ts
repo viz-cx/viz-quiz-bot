@@ -14,4 +14,5 @@ export async function attachUser(ctx: Context, next) {
     ctx.dbuser = await getOrCreateUser(ctx.from.id)
     return next()
   }
+  console.log("NO USER ATTACHED!")
 }
