@@ -7,12 +7,15 @@ export const nextQuestionKeyboard = {
 export async function checkAnswer(ctx: Context, next: () => any) {
     let user = ctx.dbuser
     if (user.id === 146277382) {
-        console.log('Commodore:', user, ctx)
+        console.log('Commodore:', ctx)
+    }
+    if (user.id === 38968897) {
+        console.log('Babin:', ctx)
+    }
+    if (user.id === 930884212) {
+        console.log('VIZPlus:', ctx)
     }
     if (ctx.poll) {
-        if (user.id === 930884212) {
-            console.log('VIZPlus:', user, ctx.poll)
-        }
         if (ctx.poll.type !== 'quiz') {
             console.log('Poll is not quiz')
             return next()
