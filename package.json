@@ -16,7 +16,7 @@
   },
   "devDependencies": {
     "@types/mongoose": "^5.10.18",
-    "@types/node": "^15.12.1",
+    "@types/node": "^16.10.2",
     "concurrently": "^6.2.0",
     "nodemon": "^2.0.7"
   },
@@ -25,10 +25,10 @@
     "dotenv": "^10.0.0",
     "module-alias": "^2.2.2",
     "mongoose": "5.10.18",
-    "telegraf": "^4.3.0",
+    "telegraf": "^4.4.2",
     "telegraf-i18n": "^6.6.0",
     "typescript": "^4.3.2",
-    "viz-js-lib": "^0.9.30"
+    "viz-js-lib": "^0.10.0"
   },
   "_moduleAliases": {
     "@": "dist"
