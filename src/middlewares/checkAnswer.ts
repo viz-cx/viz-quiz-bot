@@ -36,25 +36,17 @@ export async function checkAnswer(ctx: Context, next: () => any) {
             }
         }
         let isCorrectAnswer = (answerID === ctx.poll.correct_option_id)
-        if (!ctx.poll.is_closed) {
-            if (allVotesCount === 1) {
-                if (isCorrectAnswer) {
-                    const baseValue = 100
-                    const addValue = baseValue + (baseValue / 10 * user.multiplier)
-                    user.balance = user.balance + addValue
-                    user.multiplier = user.multiplier + 1
-                    console.log(`Add ${addValue} to ${user.id} for right answer (now ${user.balance})`)
-                    let payload = { score: addValue, balance: user.balance }
-                    ctx.telegram.sendMessage(ctx.dbuser.id, ctx.i18n.t('success_pay_for_answer', payload))
-                } else {
-                    console.log(`Incorrect answer for user ${user.id}`)
-                    user.multiplier = 0
-                }
-            } else {
-                console.log(`Votes count = ${allVotesCount} for user ${user.id}`)
-            }
+        if (allVotesCount === 1 && isCorrectAnswer) {
+            const baseValue = 100
+            const addValue = baseValue + (baseValue / 10 * user.multiplier)
+            user.balance = user.balance + addValue
+            user.multiplier = user.multiplier + 1
+            console.log(`Add ${addValue} to ${user.id} for right answer (now ${user.balance})`)
+            let payload = { score: addValue, balance: user.balance }
+            ctx.telegram.sendMessage(ctx.dbuser.id, ctx.i18n.t('success_pay_for_answer', payload))
         } else {
-            console.log(`Poll is closed for user ${user.id}`)
+            console.log(`Incorrect answer for user ${user.id}`)
+            user.multiplier = 0
         }
         user.answered.push(user.quizId)
         user.quizId = null

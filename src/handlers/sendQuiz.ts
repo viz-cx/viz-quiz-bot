@@ -46,7 +46,9 @@ export async function sendQuiz(ctx: Context) {
         user.quizMessageId = msg.message_id
         user.quizId = randomQuiz._id
         user.save()
-        // setTimeout(function () { closePoll(ctx, msg.message_id) }, secondsToAnswer * 1000);
+        setTimeout(function () {
+            closePoll(ctx, msg.message_id)
+        }, (secondsToAnswer - 1) * 1000)
     })
 }
 
@@ -74,5 +76,5 @@ function shuffle(array) {
 async function closePoll(ctx: Context, message_id: number) {
     try {
         await ctx.stopPoll(message_id)
-    } catch (err) { console.log(err) }
+    } catch (_) { }
 }
