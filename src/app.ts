@@ -49,10 +49,14 @@ setupStart(bot)
 let options: Telegraf.LaunchOptions = {}
 let domain = process.env.DOMAIN
 if (domain.length > 0) {
+  let port = parseInt(process.env.PORT)
+  if (port == 0) {
+    port = 3000
+  }
   options = {
     webhook: {
       domain: domain,
-      port: 3000
+      port: port
     }
   }
 }
