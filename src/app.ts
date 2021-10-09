@@ -22,6 +22,7 @@ import { startSelfAwarding } from './selfAward'
 import { makeCheque } from './handlers/widthdrowal'
 import { sendStats } from './handlers/sendStats'
 import { startNotifications } from './sendNotifications'
+import { Telegraf } from 'telegraf'
 
 // Middlewares
 bot.use(ignoreOldMessageUpdates)
@@ -44,7 +45,20 @@ bot.hears(new RegExp('🧠 .*'), async ctx => sendQuiz(ctx))
 bot.hears(new RegExp('🏦 .*'), async ctx => sendResults(ctx))
 // Start bot
 setupStart(bot)
-bot.launch().then(() => {
+
+let options: Telegraf.LaunchOptions = {}
+let webhook = process.env.WEBHOOK
+if (webhook.length > 0) {
+  options = {
+    webhook: {
+      hookPath: webhook
+    }
+  }
+  require('http')
+    .createServer(bot.webhookCallback('/'))
+    .listen(3000)
+}
+bot.launch(options).then(() => {
   console.info(`Bot ${bot.botInfo.username} is up and running`)
   startSelfAwarding()
   startUnstaking()
