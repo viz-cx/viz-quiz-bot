@@ -51,7 +51,8 @@ let domain = process.env.DOMAIN
 if (domain.length > 0) {
   options = {
     webhook: {
-      domain: domain
+      domain: domain,
+      port: 3000
     }
   }
 }
