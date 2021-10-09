@@ -8,8 +8,6 @@ USER node
 
 COPY --chown=node:node . .
 
-EXPOSE 3000
-
 RUN yarn install
 
 CMD [ "yarn", "distribute" ]

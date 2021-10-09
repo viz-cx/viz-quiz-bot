@@ -47,16 +47,14 @@ bot.hears(new RegExp('🏦 .*'), async ctx => sendResults(ctx))
 setupStart(bot)
 
 let options: Telegraf.LaunchOptions = {}
-let webhook = process.env.WEBHOOK
-if (webhook.length > 0) {
+let port = parseInt(process.env.PORT)
+if (port > 0) {
   options = {
     webhook: {
-      hookPath: webhook
+      host: '127.0.0.1',
+      port: port
     }
   }
-  require('http')
-    .createServer(bot.webhookCallback('/'))
-    .listen(3000)
 }
 bot.launch(options).then(() => {
   console.info(`Bot ${bot.botInfo.username} is up and running`)
