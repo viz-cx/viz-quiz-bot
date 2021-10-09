@@ -47,12 +47,11 @@ bot.hears(new RegExp('🏦 .*'), async ctx => sendResults(ctx))
 setupStart(bot)
 
 let options: Telegraf.LaunchOptions = {}
-let port = parseInt(process.env.PORT)
-if (port > 0) {
+let domain = process.env.DOMAIN
+if (domain.length > 0) {
   options = {
     webhook: {
-      host: '127.0.0.1',
-      port: port
+      domain: domain
     }
   }
 }
