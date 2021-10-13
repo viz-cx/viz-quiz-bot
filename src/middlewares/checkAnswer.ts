@@ -51,11 +51,11 @@ export async function checkAnswer(ctx: Context, next: () => any) {
             console.log(`Add ${addValue} to ${user.id} for right answer (now ${user.balance})`)
             let payload = { score: addValue, balance: user.balance }
             ctx.telegram.sendMessage(ctx.dbuser.id, ctx.i18n.t('success_pay_for_answer', payload))
+            user.answered.push(user.quizId)
         } else {
             console.log(`Incorrect answer for user ${user.id}`)
             user.multiplier = 0
         }
-        user.answered.push(user.quizId)
         user.quizId = null
         user.save()
         setTimeout(() => addNextQuestionButton(ctx), 2000)
