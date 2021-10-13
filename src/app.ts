@@ -23,6 +23,7 @@ import { makeCheque } from './handlers/widthdrowal'
 import { sendStats } from './handlers/sendStats'
 import { startNotifications } from './sendNotifications'
 import { Telegraf } from 'telegraf'
+import { TlsOptions } from 'tls'
 
 // Middlewares
 bot.use(ignoreOldMessageUpdates)
@@ -58,6 +59,13 @@ if (domain.length > 0) {
       domain: domain,
       port: port
     }
+  }
+  let cert = process.env.CERT
+  if (cert.length > 0) {
+    let tlsOptions: TlsOptions = {
+      cert: cert
+    }
+    options.webhook.tlsOptions = tlsOptions
   }
 }
 bot.launch(options).then(() => {
