@@ -13,6 +13,13 @@ export async function checkAnswer(ctx: Context, next: () => any) {
         console.log('VIZPlus:', ctx)
     }
     if (ctx.poll) {
+        let answeredQuizzes = user.answered
+        if (answeredQuizzes === null) {
+            answeredQuizzes = []
+        }
+        if (answeredQuizzes.includes(user.quizId)) {
+            return next()
+        }
         if (ctx.poll.type !== 'quiz') {
             console.log('Poll is not quiz')
             return next()
