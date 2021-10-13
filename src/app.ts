@@ -50,7 +50,7 @@ let options: Telegraf.LaunchOptions = {}
 let domain = process.env.DOMAIN
 if (domain.length > 0) {
   let port = parseInt(process.env.PORT)
-  if (port == NaN) {
+  if (isNaN(port)) {
     port = 3000
   }
   options = {
@@ -62,7 +62,8 @@ if (domain.length > 0) {
 }
 bot.launch(options).then(() => {
   console.info(`Bot ${bot.botInfo.username} is up and running`)
-  console.info(bot.telegram.getWebhookInfo())
+  bot.telegram.getWebhookInfo()
+    .then(info => console.log(info))
   startSelfAwarding()
   startUnstaking()
   startNotifications()
