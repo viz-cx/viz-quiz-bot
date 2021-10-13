@@ -50,7 +50,7 @@ let options: Telegraf.LaunchOptions = {}
 let domain = process.env.DOMAIN
 if (domain.length > 0) {
   let port = parseInt(process.env.PORT)
-  if (port == 0) {
+  if (port == NaN) {
     port = 3000
   }
   options = {
