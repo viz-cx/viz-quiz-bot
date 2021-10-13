@@ -62,6 +62,7 @@ if (domain.length > 0) {
 }
 bot.launch(options).then(() => {
   console.info(`Bot ${bot.botInfo.username} is up and running`)
+  console.info(bot.telegram.getWebhookInfo())
   startSelfAwarding()
   startUnstaking()
   startNotifications()
