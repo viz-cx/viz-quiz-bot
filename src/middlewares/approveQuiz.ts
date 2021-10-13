@@ -5,7 +5,7 @@ import { addToBalance, findUser, User } from '@/models'
 
 export function approveQuiz(ctx: Context, next: () => any) {
     const adminID = parseInt(process.env.ADMIN_TELEGRAM_ID)
-    if (ctx.chat.id !== adminID) {
+    if (!ctx.chat || ctx.chat.id !== adminID) {
         return next()
     }
     if (ctx.message === undefined) {
