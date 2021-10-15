@@ -1,6 +1,6 @@
 import { addToBalance, findUser } from "@/models/User"
-import { Context, Markup as m, Telegraf } from "telegraf"
-import { i18n } from "@/helpers/i18n"
+import { Context, Telegraf } from "telegraf"
+import { sendMainKeyboard } from "@/helpers/keyboard"
 
 export function setupStart(bot: Telegraf<Context>) {
     bot.start((ctx) => {
@@ -36,27 +36,8 @@ export function setupStart(bot: Telegraf<Context>) {
     })
 }
 
-export function sendMainKeyboard(ctx: Context) {
-    const link = 'https://t.me/' + ctx.botInfo.username + '?start=' + ctx.dbuser.id
-    const params = {
-        botname: ctx.botInfo.username,
-        userID: ctx.dbuser.id,
-        link: link
-    }
-    return ctx.replyWithHTML(ctx.i18n.t('help', params), {
-        reply_markup: mainKeyboard(ctx.i18n.locale()).reply_markup,
-        disable_web_page_preview: true
-    })
-}
-
-export function mainKeyboard(language: string) {
-    const play = m.button.callback('🧠 ' + i18n.t(language, 'quiz_button'), 'play')
-    const withdrawal = m.button.callback('🏦 ' + i18n.t(language, 'results_button'), 'results')
-    return m.keyboard([[play, withdrawal]]).resize()
-}
-
 function payToReferrer(referrerId: number, ctx: Context) {
-    let add = 200
+    let add = 1000
     addToBalance(referrerId, add)
         .then(_ => {
             findUser(referrerId).then(u => {
@@ -64,11 +45,10 @@ function payToReferrer(referrerId: number, ctx: Context) {
                 ctx.telegram.sendMessage(u.id, ctx.i18n.t('success_pay_referrer', payload))
             })
         })
-
 }
 
 function payToReferral(referralId: number, ctx: Context) {
-    let add = 200
+    let add = 1000
     addToBalance(referralId, add)
         .then(_ => {
             findUser(referralId)

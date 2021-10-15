@@ -2,7 +2,7 @@ import { VIZ } from "./helpers/viz"
 
 const viz = new VIZ()
 
-export function startSelfAwarding() {
+export async function startSelfAwarding() {
     const hours = randomFromInterval(5, 50)
     setTimeout(() => {
         makeSelfAward()
@@ -10,7 +10,7 @@ export function startSelfAwarding() {
     }, 1000 * 60 * 60 * hours)
 }
 
-function makeSelfAward() {
+async function makeSelfAward() {
     const account = process.env.ACCOUNT
     const wif = process.env.WIF
     viz.getAccount(account).then(data => {

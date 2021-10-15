@@ -1,4 +1,3 @@
-import { VIZ } from "@/helpers/viz"
 import { getAllBalances } from "@/models"
 import { Context, Markup } from "telegraf"
 import { ExtraReplyMessage } from "telegraf/typings/telegram-types"
