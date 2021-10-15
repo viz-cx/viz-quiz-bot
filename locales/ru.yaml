@@ -11,6 +11,8 @@ language: Пожалуйста, выберите язык.
 language_selected: <b>Бот</b> теперь говорит по-русски.
 quiz_button: Квиз
 results_button: Вывести
+difficulty_button: Сложность
+info_button: Инфо
 results: |
   Текущий баланс: ${balance} баллов (<b>≈${viz} Ƶ</b>)
 

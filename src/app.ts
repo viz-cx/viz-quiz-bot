@@ -24,6 +24,8 @@ import { sendStats } from './handlers/sendStats'
 import { startNotifications } from './sendNotifications'
 import { Telegraf } from 'telegraf'
 import { TlsOptions } from 'tls'
+import { sendDifficulty } from './handlers/sendDifficulty'
+import { sendInfo } from './handlers/sendInfo'
 
 // Middlewares
 bot.use(ignoreOldMessageUpdates)
@@ -44,12 +46,14 @@ bot.catch(console.error)
 // Hears
 bot.hears(new RegExp('🧠 .*'), async ctx => sendQuiz(ctx))
 bot.hears(new RegExp('🏦 .*'), async ctx => sendResults(ctx))
+bot.hears(new RegExp('⌛️ .*'), async ctx => sendDifficulty(ctx))
+bot.hears(new RegExp('ℹ️ .*'), async ctx => sendInfo(ctx))
 // Start bot
 setupStart(bot)
 
 let options: Telegraf.LaunchOptions = {}
 let domain = process.env.DOMAIN
-if (domain.length > 0) {
+if (domain && domain.length > 0) {
   let port = parseInt(process.env.PORT)
   if (isNaN(port)) {
     port = 3000
@@ -61,7 +65,7 @@ if (domain.length > 0) {
     }
   }
   let cert = process.env.CERT
-  if (cert.length > 0) {
+  if (cert && cert.length > 0) {
     let tlsOptions: TlsOptions = {
       cert: cert
     }

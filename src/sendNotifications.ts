@@ -1,10 +1,10 @@
 import { Message } from 'telegraf/typings/core/types/typegram'
-import { mainKeyboard } from './handlers/setupStart'
+import { mainKeyboard } from './helpers/keyboard'
 import { bot } from './helpers/bot'
 import { i18n } from './helpers/i18n'
 import { getQuizCountAfterDate, getUsersNotifiedBefore, updateNotifiedDate } from './models'
 
-export function startNotifications() {
+export async function startNotifications() {
     const hours = 72
     setTimeout(() => {
         makeNotifications()

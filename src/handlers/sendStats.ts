@@ -1,4 +1,3 @@
-import { VIZ } from "@/helpers/viz";
 import { getUsersCount, getQuizCountAfterDate, getAllBalances, getRichestUser } from "@/models";
 import { Context } from "telegraf/typings/context";
 
