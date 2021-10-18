@@ -1,6 +1,7 @@
 import { findQuizById, findUnasweredQuizzes, Quiz } from "@/models/Quiz"
 import { Context } from "telegraf"
 import { nextQuestionKeyboard } from "@/middlewares/checkAnswer"
+import { Difficulty, User } from "@/models"
 
 export async function sendQuiz(ctx: Context) {
     deletePreviousMessage(ctx)
@@ -32,7 +33,21 @@ export async function sendQuiz(ctx: Context) {
     let shuffledAnswers = shuffle(answers)
     let correctValueID = shuffledAnswers.indexOf(correctValue)
     let explanation = randomQuiz.explanation
-    let secondsToAnswer = 30
+    let secondsToAnswer: number
+    switch ((ctx.dbuser as User).difficulty) {
+        case Difficulty.Easy:
+            secondsToAnswer = 120
+            break
+        case Difficulty.Hard:
+            secondsToAnswer = 30
+            break
+        case Difficulty.Nightmare:
+            secondsToAnswer = 15
+            break
+        default:
+            secondsToAnswer = 60
+            break
+    }
     ctx.replyWithQuiz(question, shuffledAnswers, {
         is_anonymous: true,
         allows_multiple_answers: false,

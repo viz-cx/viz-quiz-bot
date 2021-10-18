@@ -1,5 +1,13 @@
 import { prop, getModelForClass, mongoose, DocumentType } from '@typegoose/typegoose'
 
+
+export enum Difficulty {
+  Easy,
+  Normal,
+  Hard,
+  Nightmare
+}
+
 export class User {
   @prop({ required: true, index: true, unique: true })
   id: number
@@ -30,6 +38,9 @@ export class User {
 
   @prop({ required: true, default: new Date(0) })
   notifiedAt: Date
+
+  @prop({ required: true, enum: Difficulty, type: Number, default: Difficulty.Normal })
+  difficulty: Difficulty
 }
 
 export const UserModel = getModelForClass(User, {

@@ -24,7 +24,7 @@ import { sendStats } from './handlers/sendStats'
 import { startNotifications } from './sendNotifications'
 import { Telegraf } from 'telegraf'
 import { TlsOptions } from 'tls'
-import { sendDifficulty } from './handlers/sendDifficulty'
+import { difficultyEmojies, sendDifficulty, setDifficulty } from './handlers/difficulty'
 import { sendInfo } from './handlers/sendInfo'
 
 // Middlewares
@@ -40,6 +40,7 @@ bot.command('language', sendLanguage)
 bot.command(['stats', 'stat'], sendStats)
 // Actions
 bot.action(localeActions, setLanguage)
+bot.action(difficultyEmojies, setDifficulty)
 bot.action('💰', makeCheque)
 // Errors
 bot.catch(console.error)

@@ -1,3 +1,4 @@
+import { Difficulty, User } from '@/models'
 import { Context } from 'telegraf'
 
 export const nextQuestionKeyboard = {
@@ -39,7 +40,21 @@ export async function checkAnswer(ctx: Context, next: () => any) {
         let isCorrectAnswer = (answerID === ctx.poll.correct_option_id)
         if (allVotesCount === 1 && isCorrectAnswer) {
             const baseValue = 100
-            const addValue = baseValue + (baseValue / 10 * user.multiplier)
+            let addValue = baseValue + (baseValue / 10 * user.multiplier)
+            switch ((ctx.dbuser as User).difficulty) {
+                case Difficulty.Easy:
+                    addValue = addValue * 0.5
+                    break
+                case Difficulty.Hard:
+                    addValue = addValue * 1.5
+                    break
+                case Difficulty.Nightmare:
+                    addValue = addValue * 2
+                    break
+                default:
+                    addValue = addValue * 1
+                    break
+            }
             user.balance = user.balance + addValue
             user.multiplier = user.multiplier + 1
             console.log(`Add ${addValue} to ${user.id} for right answer (now ${user.balance})`)
