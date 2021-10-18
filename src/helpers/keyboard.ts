@@ -21,7 +21,6 @@ export function mainKeyboard(language: string) {
     const info = m.button.callback('ℹ️ ' + i18n.t(language, 'info_button'), 'info')
     return m.keyboard([
         [play, withdrawal],
-        // [difficulty, info]
-        [info]
+        [difficulty, info]
     ]).resize()
 }
