@@ -15,12 +15,12 @@ export async function resetCallback(ctx: Context, next: () => any) {
     if (ctx.callbackQuery && (ctx.callbackQuery as any).data === 'reset') {
         let weekAgo = new Date(Date.now() - 604800000)
         let user = ctx.dbuser
-        console.log(user.resetedAt, weekAgo, user.resetedAt > weekAgo)
         if (user.resetedAt > weekAgo) {
             return await ctx.editMessageText('⛔️ ' + ctx.i18n.t('reset_unavailable'))
         } else {
             user.resetedAt = new Date()
             await user.save()
+            console.log('!!! Reset user', user.id)
             return await ctx.editMessageText('✅ ' + ctx.i18n.t('reset_success'))
         }
     } else {
