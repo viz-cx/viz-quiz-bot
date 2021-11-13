@@ -36,13 +36,13 @@ export async function sendQuiz(ctx: Context) {
     let secondsToAnswer: number
     switch ((ctx.dbuser as User).difficulty) {
         case Difficulty.Easy:
-            secondsToAnswer = 120
+            secondsToAnswer = 600
             break
         case Difficulty.Hard:
-            secondsToAnswer = 30
+            secondsToAnswer = 20
             break
         case Difficulty.Nightmare:
-            secondsToAnswer = 15
+            secondsToAnswer = 10
             break
         default:
             secondsToAnswer = 60
