@@ -23,7 +23,8 @@ export async function makeCheque(ctx: Context) {
     let u = ctx.dbuser
     u.balance = 0
     u.multiplier = 0
-    u.save().then(async u => {
+    u.resetedAt = new Date()
+    u.save().then(async _ => {
         try {
             ctx.deleteMessage(ctx.callbackQuery.message.message_id)
         } catch (_) {}

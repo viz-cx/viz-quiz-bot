@@ -26,6 +26,7 @@ import { Telegraf } from 'telegraf'
 import { TlsOptions } from 'tls'
 import { difficultyEmojies, sendDifficulty, setDifficulty } from './handlers/difficulty'
 import { sendInfo } from './handlers/sendInfo'
+import { resetCallback, sendReset } from './handlers/sendReset'
 
 // Middlewares
 bot.use(ignoreOldMessageUpdates)
@@ -35,9 +36,11 @@ bot.use(checkAnswer)
 bot.use(nextQuestionCallback)
 bot.use(approveQuiz)
 bot.use(proposeQuiz)
+bot.use(resetCallback)
 // Commands
 bot.command('language', sendLanguage)
 bot.command(['stats', 'stat'], sendStats)
+bot.command('reset', sendReset)
 // Actions
 bot.action(localeActions, setLanguage)
 bot.action(difficultyEmojies, setDifficulty)
@@ -52,31 +55,8 @@ bot.hears(new RegExp('ℹ️ .*'), async ctx => sendInfo(ctx))
 // Start bot
 setupStart(bot)
 
-let options: Telegraf.LaunchOptions = {}
-let domain = process.env.DOMAIN
-if (domain && domain.length > 0) {
-  let port = parseInt(process.env.PORT)
-  if (isNaN(port)) {
-    port = 3000
-  }
-  options = {
-    webhook: {
-      domain: domain,
-      port: port
-    }
-  }
-  let cert = process.env.CERT
-  if (cert && cert.length > 0) {
-    let tlsOptions: TlsOptions = {
-      cert: cert
-    }
-    options.webhook.tlsOptions = tlsOptions
-  }
-}
-bot.launch(options).then(() => {
+bot.launch().then(() => {
   console.info(`Bot ${bot.botInfo.username} is up and running`)
-  bot.telegram.getWebhookInfo()
-    .then(info => console.log(info))
   startSelfAwarding()
   startUnstaking()
   startNotifications()

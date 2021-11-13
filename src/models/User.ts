@@ -41,6 +41,9 @@ export class User {
 
   @prop({ required: true, enum: Difficulty, type: Number, default: Difficulty.Normal })
   difficulty: Difficulty
+
+  @prop({ required: true, default: new Date(0) })
+  resetedAt: Date
 }
 
 export const UserModel = getModelForClass(User, {
