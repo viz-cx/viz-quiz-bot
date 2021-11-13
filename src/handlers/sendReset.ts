@@ -18,6 +18,8 @@ export async function resetCallback(ctx: Context, next: () => any) {
         if (user.resetedAt > weekAgo) {
             return await ctx.editMessageText('⛔️ ' + ctx.i18n.t('reset_unavailable'))
         } else {
+            user.balance = 0
+            user.multiplier = 0
             user.resetedAt = new Date()
             await user.save()
             console.log('!!! Reset user', user.id)
