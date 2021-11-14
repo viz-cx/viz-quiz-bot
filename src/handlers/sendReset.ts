@@ -20,6 +20,7 @@ export async function resetCallback(ctx: Context, next: () => any) {
         } else {
             user.balance = 0
             user.multiplier = 0
+            user.answered = []
             user.resetedAt = new Date()
             await user.save()
             console.log('!!! Reset user', user.id)
