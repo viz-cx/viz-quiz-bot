@@ -1,7 +1,7 @@
 import { findQuizById, findUnasweredQuizzes, Quiz } from "@/models/Quiz"
 import { Context } from "telegraf"
 import { nextQuestionKeyboard } from "@/middlewares/checkAnswer"
-import { Difficulty, User } from "@/models"
+import { Difficulty, findUser, User } from "@/models"
 
 export async function sendQuiz(ctx: Context) {
     deletePreviousMessage(ctx)
@@ -61,9 +61,18 @@ export async function sendQuiz(ctx: Context) {
         user.quizMessageId = msg.message_id
         user.quizId = randomQuiz._id
         user.save()
-        setTimeout(function () {
-            closePoll(ctx, msg.message_id)
-        }, (secondsToAnswer - 1) * 1000)
+        setTimeout((userId, quizMessageId, messageId) => {
+            findUser(userId)
+                .then(u => {
+                    let answeredQuizzes = u.answered
+                    if (answeredQuizzes === null) {
+                        answeredQuizzes = []
+                    }
+                    if (!answeredQuizzes.includes(quizMessageId)) {
+                        closePoll(ctx, messageId)
+                    }
+                })
+        }, (secondsToAnswer - 1) * 1000, user.id, user.quizId, msg.message_id)
     })
 }
 
