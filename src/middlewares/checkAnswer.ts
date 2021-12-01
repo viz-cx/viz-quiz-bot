@@ -73,7 +73,7 @@ export async function checkAnswer(ctx: Context, next: () => any) {
     }
 }
 
-function addNextQuestionButton(ctx: Context) {
-    ctx.telegram.editMessageReplyMarkup(ctx.dbuser.id, ctx.dbuser.quizMessageId, undefined, nextQuestionKeyboard)
+export async function addNextQuestionButton(ctx: Context) {
+    return ctx.telegram.editMessageReplyMarkup(ctx.dbuser.id, ctx.dbuser.quizMessageId, undefined, nextQuestionKeyboard)
         .catch(err => console.log(err.message))
 }
