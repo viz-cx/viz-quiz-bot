@@ -67,13 +67,7 @@ export async function checkAnswer(ctx: Context, next: () => any) {
         }
         user.quizId = null
         user.save()
-        setTimeout(() => addNextQuestionButton(ctx), 2000)
     } else {
         return next()
     }
-}
-
-export async function addNextQuestionButton(ctx: Context) {
-    return ctx.telegram.editMessageReplyMarkup(ctx.dbuser.id, ctx.dbuser.quizMessageId, undefined, nextQuestionKeyboard)
-        .catch(err => console.log(err.message))
 }

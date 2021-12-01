@@ -1,6 +1,6 @@
 import { findQuizById, findUnasweredQuizzes, Quiz } from "@/models/Quiz"
 import { Context } from "telegraf"
-import { addNextQuestionButton, nextQuestionKeyboard } from "@/middlewares/checkAnswer"
+import { nextQuestionKeyboard } from "@/middlewares/checkAnswer"
 import { Difficulty, findUser, User } from "@/models"
 
 export async function sendQuiz(ctx: Context) {
@@ -100,6 +100,5 @@ function shuffle(array) {
 async function closePoll(ctx: Context, message_id: number) {
     try {
         await ctx.stopPoll(message_id)
-        await addNextQuestionButton(ctx)
     } catch (_) { }
 }
