@@ -1,3 +1,4 @@
+import { Emoji } from "@/helpers/keyboard"
 import { getAllBalances } from "@/models"
 import { Context, Markup } from "telegraf"
 import { ExtraReplyMessage } from "telegraf/typings/telegram-types"
@@ -23,7 +24,7 @@ export async function sendResults(ctx: Context) {
     }
     let hideButton = !withdrowalable
     let markup = Markup.inlineKeyboard([
-        Markup.button.callback('💰 ' + ctx.i18n.t('withdrowal'), '💰', hideButton)
+        Markup.button.callback(Emoji.Cheque + ' ' + ctx.i18n.t('withdrowal'), Emoji.Cheque, hideButton)
     ]).reply_markup
     let extra: ExtraReplyMessage = {
         parse_mode: 'HTML',
