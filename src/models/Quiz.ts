@@ -1,6 +1,7 @@
-import { prop, getModelForClass, DocumentType, mongoose } from '@typegoose/typegoose'
+import { prop, getModelForClass, DocumentType, mongoose, modelOptions } from '@typegoose/typegoose'
 import { Base } from '@typegoose/typegoose/lib/defaultClasses'
 
+@modelOptions({ schemaOptions: { collection: 'quizzes' } })
 export class Quiz extends Base<mongoose.Schema.Type.String> {
     @prop()
     question: string
@@ -14,7 +15,7 @@ export class Quiz extends Base<mongoose.Schema.Type.String> {
     @prop({ required: true })
     authorId: number
 
-    @prop({ required: true, unique: true })
+    @prop({ required: false, unique: true, sparse: true })
     pollId: string // in telegram, against duplicates
 }
 

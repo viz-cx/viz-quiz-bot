@@ -1,4 +1,5 @@
-import { prop, getModelForClass, mongoose, DocumentType } from '@typegoose/typegoose'
+import { prop, getModelForClass, mongoose, DocumentType, Ref } from '@typegoose/typegoose'
+import { Section } from './Section'
 
 export enum Difficulty {
   Easy,
@@ -46,6 +47,9 @@ export class User {
 
   @prop({ required: false })
   state?: string
+
+  @prop({ required: false, ref: () => Section })
+  selectedSection?: Ref<Section>
 }
 
 export const UserModel = getModelForClass(User, {

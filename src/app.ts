@@ -25,7 +25,7 @@ import { startNotifications } from './sendNotifications'
 import { difficultyEmojies, sendDifficulty, setDifficulty } from './handlers/difficulty'
 import { resetCallback, sendReset } from './handlers/sendReset'
 import { Emoji } from './helpers/keyboard'
-import { checkTitleCallback, createCallback, sendSelect } from './handlers/sendSelect'
+import { waitTitleMiddleware, createCallback, sendSelect } from './handlers/sendSelect'
 import { cancelCallback } from './middlewares/cancelCallback'
 
 // Middlewares
@@ -39,7 +39,7 @@ bot.use(approveQuiz)
 bot.use(proposeQuiz)
 bot.use(resetCallback)
 bot.use(createCallback)
-bot.use(checkTitleCallback)
+bot.use(waitTitleMiddleware)
 // Commands
 bot.command('language', sendLanguage)
 bot.command(['stats', 'stat'], sendStats)
@@ -57,6 +57,8 @@ bot.hears(new RegExp(Emoji.Difficulty + ' .*'), async ctx => sendDifficulty(ctx)
 bot.hears(new RegExp(Emoji.Withdrawal + ' .*'), async ctx => sendResults(ctx))
 // Start bot
 setupStart(bot)
+
+bot.on('message', ctx => ctx.reply(ctx.i18n.t('not_understanded')))
 
 bot.launch().then(() => {
   console.info(`Bot ${bot.botInfo.username} is up and running`)
