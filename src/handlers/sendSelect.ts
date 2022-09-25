@@ -21,10 +21,9 @@ export async function createCallback(ctx: Context, next: () => any) {
             ctx.dbuser.selectedSection = undefined
             ctx.dbuser.state = 'wait_title'
             await ctx.dbuser.save()
-            let keyboard = m.inlineKeyboard([m.button.callback(ctx.i18n.t('cancel_button'), 'cancel')])
+            let keyboard = cancelKeyboard(ctx)
             return await ctx.editMessageText(ctx.i18n.t('create_section_title'), keyboard)
         default:
-            console.log(data)
             if (data.startsWith(sectionPrefix)) {
                 let sectionId = data.split('_')[1]
                 if (sectionId === undefined || sectionId.length === 0) {
@@ -37,7 +36,7 @@ export async function createCallback(ctx: Context, next: () => any) {
                 if (ctx.dbuser.selectedSection && ctx.dbuser.selectedSection.equals(selectedSection.id.toString())) {
                     ctx.dbuser.state = 'wait_title'
                     await ctx.dbuser.save()
-                    let keyboard = m.inlineKeyboard([m.button.callback(ctx.i18n.t('cancel_button'), 'cancel')])
+                    let keyboard = cancelKeyboard(ctx)
                     return await ctx.editMessageText(ctx.i18n.t('create_section_title'), keyboard)
                 }
 
@@ -87,6 +86,10 @@ export async function waitTitleMiddleware(ctx: Context, next: () => any) {
     } else {
         return next()
     }
+}
+
+function cancelKeyboard(ctx: Context) {
+    return m.inlineKeyboard([m.button.callback(ctx.i18n.t('cancel_button'), 'cancel')])
 }
 
 async function selectKeyboard(ctx: Context) {
