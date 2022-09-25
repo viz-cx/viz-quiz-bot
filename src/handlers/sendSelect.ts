@@ -4,18 +4,7 @@ import { Markup as m } from 'telegraf';
 import { Message } from "telegraf/typings/core/types/typegram";
 
 export async function sendSelect(ctx: Context) {
-    const userSections = await getSectionsByUser(ctx.dbuser.id)
-    let ownSectionButtons = userSections.map((s) => {
-        var title = s.title
-        if (ctx.dbuser.selectedSection && ctx.dbuser.selectedSection.equals(s.id.toString())) {
-            title = '✅' + title
-        }
-        return m.button.callback(title, s.id)
-    })
-    let unansweredSections = [] // TODO: list of buttons with unanswered quiz sections
-    let buttons = [m.button.callback('🔧 ' + ctx.i18n.t('create_button'), 'create_button')]
-        .concat(ownSectionButtons, unansweredSections)
-    const keyboard = m.inlineKeyboard(buttons, { columns: 1 })
+    let keyboard = await selectKeyboard(ctx)
     await ctx.replyWithHTML('👉️ ' + ctx.i18n.t('select'), keyboard)
 }
 
@@ -30,7 +19,6 @@ export async function createCallback(ctx: Context, next: () => any) {
             await ctx.dbuser.save()
             let keyboard = m.inlineKeyboard([m.button.callback(ctx.i18n.t('cancel_button'), 'cancel')])
             return await ctx.editMessageText(ctx.i18n.t('create_section_title'), keyboard)
-            break
         default:
             return next()
     }
@@ -50,7 +38,8 @@ export async function waitTitleMiddleware(ctx: Context, next: () => any) {
             ctx.dbuser.selectedSection = newSection
             ctx.dbuser.state = ''
             await ctx.dbuser.save()
-            ctx.reply(ctx.i18n.t('section_created'))
+            let keyboard = await selectKeyboard(ctx)
+            await ctx.reply(ctx.i18n.t('section_created'), keyboard)
         } catch (e) {
             console.log(e)
             let msg = e["message"]
@@ -61,4 +50,20 @@ export async function waitTitleMiddleware(ctx: Context, next: () => any) {
     } else {
         return next()
     }
+}
+
+async function selectKeyboard(ctx: Context) {
+    const userSections = await getSectionsByUser(ctx.dbuser.id)
+    let ownSectionButtons = userSections.map((s) => {
+        var title = s.title
+        if (ctx.dbuser.selectedSection && ctx.dbuser.selectedSection.equals(s.id.toString())) {
+            title = '✅' + title
+        }
+        return m.button.callback(title, s.id)
+    })
+    let unansweredSections = [] // TODO: list of buttons with unanswered quiz sections
+    let buttons = [m.button.callback('🔧 ' + ctx.i18n.t('create_button'), 'create_button')]
+        .concat(ownSectionButtons, unansweredSections)
+    const keyboard = m.inlineKeyboard(buttons, { columns: 1 })
+    return keyboard
 }
