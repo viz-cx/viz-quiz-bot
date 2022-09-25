@@ -15,7 +15,6 @@ import { sendQuiz } from '@/handlers/sendQuiz'
 import { sendResults } from '@/handlers/sendResults'
 import { checkAnswer } from '@/middlewares/checkAnswer'
 import { nextQuestionCallback } from '@/middlewares/nextQuestionCallback'
-import { approveQuiz } from '@/middlewares/approveQuiz'
 import { proposeQuiz } from './middlewares/proposeQuiz'
 import { startUnstaking } from './unstake'
 import { startSelfAwarding } from './selfAward'
@@ -35,7 +34,6 @@ bot.use(i18n.middleware(), attachI18N)
 bot.use(cancelCallback)
 bot.use(checkAnswer)
 bot.use(nextQuestionCallback)
-bot.use(approveQuiz)
 bot.use(proposeQuiz)
 bot.use(resetCallback)
 bot.use(createCallback)

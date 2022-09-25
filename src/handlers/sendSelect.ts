@@ -4,7 +4,7 @@ import { Context } from "telegraf";
 import { Markup as m } from 'telegraf';
 import { Message } from "telegraf/typings/core/types/typegram";
 
-const sectionPrefix = 'section_';
+const sectionPrefix = 'section_'
 
 export async function sendSelect(ctx: Context) {
     let keyboard = await selectKeyboard(ctx)
@@ -92,7 +92,7 @@ function cancelKeyboard(ctx: Context) {
     return m.inlineKeyboard([m.button.callback(ctx.i18n.t('cancel_button'), 'cancel')])
 }
 
-async function selectKeyboard(ctx: Context) {
+export async function selectKeyboard(ctx: Context) {
     const userSections = await getSectionsByUser(ctx.dbuser.id)
     let ownSectionButtons = userSections.map((s) => {
         var title = s.title
