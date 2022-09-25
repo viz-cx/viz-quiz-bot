@@ -66,3 +66,4 @@ reset_success: Ответы успешно сброшены.
 create_button: Создать раздел
 create_section_title: Введите имя нового раздела
 section_created: Новый раздел успешно создан.
+section_updated: Раздел успешно изменён.

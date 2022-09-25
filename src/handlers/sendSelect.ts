@@ -1,7 +1,9 @@
-import { getSectionsByUser, SectionModel } from "@/models/Section";
+import { findSection, getSectionsByUser, SectionModel } from "@/models/Section";
 import { Context } from "telegraf";
 import { Markup as m } from 'telegraf';
 import { Message } from "telegraf/typings/core/types/typegram";
+
+const sectionPrefix = 'section_';
 
 export async function sendSelect(ctx: Context) {
     let keyboard = await selectKeyboard(ctx)
@@ -20,7 +22,26 @@ export async function createCallback(ctx: Context, next: () => any) {
             let keyboard = m.inlineKeyboard([m.button.callback(ctx.i18n.t('cancel_button'), 'cancel')])
             return await ctx.editMessageText(ctx.i18n.t('create_section_title'), keyboard)
         default:
-            return next()
+            console.log(data)
+            if (data.startsWith(sectionPrefix)) {
+                let sectionId = data.split('_')[1]
+                if (sectionId === undefined || sectionId.length === 0) {
+                    console.log('Empty section id')
+                    return
+                }
+                let selectedSection = await findSection(sectionId)
+                if (ctx.dbuser.selectedSection && ctx.dbuser.selectedSection.equals(selectedSection.id.toString())) {
+                    return
+                }
+                ctx.dbuser.selectedSection = selectedSection
+                ctx.dbuser.state = ''
+                await ctx.dbuser.save()
+                let keyboard = await selectKeyboard(ctx)
+                // await ctx.editMessageText(ctx.i18n.t('section_updated'))
+                await ctx.editMessageReplyMarkup(keyboard.reply_markup)
+            } else {
+                return next()
+            }
     }
 }
 
@@ -59,7 +80,7 @@ async function selectKeyboard(ctx: Context) {
         if (ctx.dbuser.selectedSection && ctx.dbuser.selectedSection.equals(s.id.toString())) {
             title = '✅' + title
         }
-        return m.button.callback(title, s.id)
+        return m.button.callback(title, sectionPrefix + s.id)
     })
     let unansweredSections = [] // TODO: list of buttons with unanswered quiz sections
     let buttons = [m.button.callback('🔧 ' + ctx.i18n.t('create_button'), 'create_button')]

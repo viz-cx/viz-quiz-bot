@@ -21,3 +21,7 @@ export const SectionModel = getModelForClass(Section, {
 export async function getSectionsByUser(authorId: number): Promise<DocumentType<Section[]>> {
     return await SectionModel.find({ authorId: authorId })
 }
+
+export async function findSection(id: string): Promise<DocumentType<Section>> {
+    return await SectionModel.findOne({ _id: id }).exec()
+}
