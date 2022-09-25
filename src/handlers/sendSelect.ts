@@ -1,4 +1,5 @@
-import { findSection, getSectionsByUser, SectionModel } from "@/models/Section";
+import { findSection, getSectionsByUser, Section, SectionModel } from "@/models/Section";
+import { DocumentType, getModelForClass, Ref } from "@typegoose/typegoose";
 import { Context } from "telegraf";
 import { Markup as m } from 'telegraf';
 import { Message } from "telegraf/typings/core/types/typegram";
@@ -17,6 +18,7 @@ export async function createCallback(ctx: Context, next: () => any) {
     let data = (ctx.callbackQuery as any).data
     switch (data) {
         case 'create_button':
+            ctx.dbuser.selectedSection = undefined
             ctx.dbuser.state = 'wait_title'
             await ctx.dbuser.save()
             let keyboard = m.inlineKeyboard([m.button.callback(ctx.i18n.t('cancel_button'), 'cancel')])
@@ -30,9 +32,15 @@ export async function createCallback(ctx: Context, next: () => any) {
                     return
                 }
                 let selectedSection = await findSection(sectionId)
+
+                // already selected, edit title
                 if (ctx.dbuser.selectedSection && ctx.dbuser.selectedSection.equals(selectedSection.id.toString())) {
-                    return
+                    ctx.dbuser.state = 'wait_title'
+                    await ctx.dbuser.save()
+                    let keyboard = m.inlineKeyboard([m.button.callback(ctx.i18n.t('cancel_button'), 'cancel')])
+                    return await ctx.editMessageText(ctx.i18n.t('create_section_title'), keyboard)
                 }
+
                 ctx.dbuser.selectedSection = selectedSection
                 ctx.dbuser.state = ''
                 await ctx.dbuser.save()
@@ -51,16 +59,24 @@ export async function waitTitleMiddleware(ctx: Context, next: () => any) {
         if (text === undefined || text.length === 0) {
             return ctx.reply(ctx.i18n.t('something_wrong'))
         }
-        let section = new SectionModel()
+        let section: Ref<Section>
+        let successMessage: string
+        if (ctx.dbuser.selectedSection) {
+            section = await findSection(ctx.dbuser.selectedSection._id)
+            successMessage = ctx.i18n.t('section_updated')
+        } else {
+            section = new SectionModel()
+            section.authorId = ctx.dbuser.id
+            successMessage = ctx.i18n.t('section_created')
+        }
         section.title = text
-        section.authorId = ctx.dbuser.id
         try {
             let newSection = await section.save()
             ctx.dbuser.selectedSection = newSection
             ctx.dbuser.state = ''
             await ctx.dbuser.save()
             let keyboard = await selectKeyboard(ctx)
-            await ctx.reply(ctx.i18n.t('section_created'), keyboard)
+            await ctx.reply(successMessage, keyboard)
         } catch (e) {
             console.log(e)
             let msg = e["message"]
