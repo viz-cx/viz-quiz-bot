@@ -1,3 +1,4 @@
+import { findQuizzesBySection } from "@/models/Quiz";
 import { findSection, getSectionsByUser, Section, SectionModel } from "@/models/Section";
 import { DocumentType, getModelForClass, Ref } from "@typegoose/typegoose";
 import { Context } from "telegraf";
@@ -32,19 +33,22 @@ export async function createCallback(ctx: Context, next: () => any) {
                 }
                 let selectedSection = await findSection(sectionId)
 
-                // already selected, edit title
-                if (ctx.dbuser.selectedSection && ctx.dbuser.selectedSection.equals(selectedSection.id.toString())) {
-                    ctx.dbuser.state = 'wait_title'
-                    await ctx.dbuser.save()
-                    let keyboard = cancelKeyboard(ctx)
-                    return await ctx.editMessageText(ctx.i18n.t('create_section_title'), keyboard)
+                let isAlreadySelected = ctx.dbuser.selectedSection 
+                    && ctx.dbuser.selectedSection.equals(selectedSection.id.toString())
+                if (isAlreadySelected) {
+                    let quizzes = await findQuizzesBySection(selectedSection._id)
+                    let buttons = quizzes.map(q => m.button.callback(q.question, q._id))
+                    let keyboard = m.inlineKeyboard([
+                        m.button.callback(ctx.i18n.t('update_section_title'), 'create_section_title'),
+                        ...buttons
+                    ], { columns: 1 })
+                    return await ctx.sendMessage(selectedSection.title, keyboard)
                 }
 
                 ctx.dbuser.selectedSection = selectedSection
                 ctx.dbuser.state = ''
                 await ctx.dbuser.save()
                 let keyboard = await selectKeyboard(ctx)
-                // await ctx.editMessageText(ctx.i18n.t('section_updated'))
                 await ctx.editMessageReplyMarkup(keyboard.reply_markup)
             } else {
                 return next()
@@ -106,4 +110,15 @@ export async function selectKeyboard(ctx: Context) {
         .concat(ownSectionButtons, unansweredSections)
     const keyboard = m.inlineKeyboard(buttons, { columns: 1 })
     return keyboard
+}
+
+export async function updateSectionTitleCallback(ctx: Context, next: () => any) {
+    if (ctx.callbackQuery && (ctx.callbackQuery as any).data === 'create_section_title') {
+        ctx.dbuser.state = 'wait_title'
+        await ctx.dbuser.save()
+        let keyboard = cancelKeyboard(ctx)
+        return await ctx.editMessageText(ctx.i18n.t('create_section_title'), keyboard)
+    } else {
+        return next()
+    }
 }

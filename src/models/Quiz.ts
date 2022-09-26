@@ -1,5 +1,6 @@
-import { prop, getModelForClass, DocumentType, mongoose, modelOptions } from '@typegoose/typegoose'
+import { prop, getModelForClass, DocumentType, mongoose, modelOptions, Ref } from '@typegoose/typegoose'
 import { Base } from '@typegoose/typegoose/lib/defaultClasses'
+import { Section } from './Section'
 
 @modelOptions({ schemaOptions: { collection: 'quizzes' } })
 export class Quiz extends Base<mongoose.Schema.Type.String> {
@@ -17,6 +18,9 @@ export class Quiz extends Base<mongoose.Schema.Type.String> {
 
     @prop({ required: false, unique: true, sparse: true })
     pollId: string // in telegram, against duplicates
+
+    @prop({ required: false })
+    sectionId?: mongoose.Types.ObjectId
 }
 
 export const QuizModel = getModelForClass(Quiz, {
@@ -29,6 +33,10 @@ export async function findQuizById(id: string): Promise<DocumentType<Quiz>> {
 
 export async function findQuizByPollId(pollId: string): Promise<DocumentType<Quiz>> {
     return await QuizModel.findOne({ pollId: pollId })
+}
+
+export async function findQuizzesBySection(sectionId: mongoose.Types.ObjectId): Promise<DocumentType<Quiz[]>> {
+    return await QuizModel.find({ sectionId: sectionId })
 }
 
 export async function findUnasweredQuizzes(answeredIds: mongoose.Types.ObjectId[]): Promise<DocumentType<Quiz>> {

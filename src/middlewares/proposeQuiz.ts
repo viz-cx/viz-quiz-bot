@@ -29,13 +29,11 @@ export async function proposeQuiz(ctx: Context, next: () => any) {
     }
 
     if (poll.type !== 'quiz') {
-        await ctx.reply(ctx.i18n.t('not_quiz'))
-        return next()
+        return await ctx.reply(ctx.i18n.t('not_quiz'))
     }
 
     if (!poll.correct_option_id) {
-        await ctx.reply('Correct answer not found!')
-        return
+        return await ctx.reply(ctx.i18n.t('something_wrong'))
     }
 
     let answers: string[] = []
@@ -54,6 +52,7 @@ export async function proposeQuiz(ctx: Context, next: () => any) {
     quiz.explanation = poll.explanation // TODO: explanation_entities
     quiz.authorId = ctx.message.from.id
     quiz.pollId = poll.id
+    quiz.sectionId = ctx.dbuser.selectedSection
     await quiz.save()
         .then(quiz => {
             // payToAuthor(quiz.authorId, ctx)
