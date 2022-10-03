@@ -1,11 +1,12 @@
-import { findQuizzesBySection } from "@/models/Quiz";
+import { findQuizById, findQuizzesBySection } from "@/models/Quiz";
 import { findSection, getSectionsByUser, Section, SectionModel } from "@/models/Section";
-import { DocumentType, getModelForClass, Ref } from "@typegoose/typegoose";
+import { Ref } from "@typegoose/typegoose";
 import { Context } from "telegraf";
 import { Markup as m } from 'telegraf';
 import { Message } from "telegraf/typings/core/types/typegram";
 
 const sectionPrefix = 'section_'
+const questionPrefix = 'question_'
 
 export async function sendSelect(ctx: Context) {
     let keyboard = await selectKeyboard(ctx)
@@ -25,33 +26,42 @@ export async function createCallback(ctx: Context, next: () => any) {
             let keyboard = cancelKeyboard(ctx)
             return await ctx.editMessageText(ctx.i18n.t('create_section_title'), keyboard)
         default:
-            if (data.startsWith(sectionPrefix)) {
-                let sectionId = data.split('_')[1]
-                if (sectionId === undefined || sectionId.length === 0) {
-                    console.log('Empty section id')
-                    return
-                }
-                let selectedSection = await findSection(sectionId)
-
-                let isAlreadySelected = ctx.dbuser.selectedSection 
-                    && ctx.dbuser.selectedSection.equals(selectedSection.id.toString())
-                if (isAlreadySelected) {
-                    let quizzes = await findQuizzesBySection(selectedSection._id)
-                    let buttons = quizzes.map(q => m.button.callback(q.question, q._id))
-                    let keyboard = m.inlineKeyboard([
-                        m.button.callback(ctx.i18n.t('update_section_title'), 'create_section_title'),
-                        ...buttons
-                    ], { columns: 1 })
-                    return await ctx.sendMessage(selectedSection.title, keyboard)
-                }
-
-                ctx.dbuser.selectedSection = selectedSection
-                ctx.dbuser.state = ''
-                await ctx.dbuser.save()
-                let keyboard = await selectKeyboard(ctx)
-                await ctx.editMessageReplyMarkup(keyboard.reply_markup)
-            } else {
+            const delimiter = '_'
+            const splitted = data.split(delimiter)
+            if (splitted.length !== 2) {
                 return next()
+            }
+            const prefix = splitted[0] + delimiter
+            const id = splitted[1]
+            if (prefix === undefined || prefix.length === 0 || id === undefined || id.length === 0) {
+                return next()
+            }
+            switch (prefix) {
+                case sectionPrefix:
+                    let selectedSection = await findSection(id)
+                    let isAlreadySelected = ctx.dbuser.selectedSection
+                        && ctx.dbuser.selectedSection.equals(selectedSection.id.toString())
+                    if (isAlreadySelected) {
+                        let quizzes = await findQuizzesBySection(selectedSection._id)
+                        let buttons = quizzes.map(q => m.button.callback(q.question, questionPrefix + q._id))
+                        let keyboard = m.inlineKeyboard([
+                            m.button.callback(ctx.i18n.t('update_section_title'), 'create_section_title'),
+                            ...buttons
+                        ], { columns: 1 })
+                        return await ctx.sendMessage(selectedSection.title, keyboard)
+                    }
+                    ctx.dbuser.selectedSection = selectedSection
+                    ctx.dbuser.state = ''
+                    await ctx.dbuser.save()
+                    let keyboard = await selectKeyboard(ctx)
+                    await ctx.editMessageReplyMarkup(keyboard.reply_markup)
+                    break
+                case questionPrefix:
+                    let quiz = await findQuizById(id)
+                    console.log(quiz)
+                    break
+                default:
+                    return next()
             }
     }
 }
