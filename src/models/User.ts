@@ -1,4 +1,5 @@
 import { prop, getModelForClass, mongoose, DocumentType, Ref } from '@typegoose/typegoose'
+import { Quiz } from './Quiz'
 import { Section } from './Section'
 
 export enum Difficulty {
@@ -50,6 +51,9 @@ export class User {
 
   @prop({ required: false, ref: () => Section })
   selectedSection?: Ref<Section>
+
+  @prop({ required: false, ref: () => Quiz })
+  selectedQuestion?: Ref<Quiz>
 }
 
 export const UserModel = getModelForClass(User, {
