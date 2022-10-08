@@ -5,8 +5,12 @@ import { Context } from "telegraf";
 import { Markup as m } from 'telegraf';
 import { Message } from "telegraf/typings/core/types/typegram";
 
+const waitSectionState = 'wait_section'
+const waitQuestionState = 'wait_question'
+
 const sectionPrefix = 'section_'
 const questionPrefix = 'question_'
+const answerPrefix = 'answer_'
 
 export async function sendSelect(ctx: Context) {
     let keyboard = await selectKeyboard(ctx)
@@ -21,14 +25,14 @@ export async function createCallback(ctx: Context, next: () => any) {
     switch (data) {
         case 'create_button':
             ctx.dbuser.selectedSection = undefined
-            ctx.dbuser.state = 'wait_title'
+            ctx.dbuser.state = waitSectionState
             await ctx.dbuser.save()
             let keyboard = cancelKeyboard(ctx)
             return await ctx.editMessageText(ctx.i18n.t('create_section_title'), keyboard)
         default:
             const delimiter = '_'
             const splitted = data.split(delimiter)
-            if (splitted.length !== 2) {
+            if (splitted.length < 2) {
                 return next()
             }
             const prefix = splitted[0] + delimiter
@@ -39,6 +43,9 @@ export async function createCallback(ctx: Context, next: () => any) {
             switch (prefix) {
                 case sectionPrefix:
                     let selectedSection = await findSection(id)
+                    if (selectedSection.authorId !== ctx.dbuser.id) {
+                        return ctx.reply(ctx.i18n.t('something_wrong'))
+                    }
                     let isAlreadySelected = ctx.dbuser.selectedSection
                         && ctx.dbuser.selectedSection.equals(selectedSection.id.toString())
                     if (isAlreadySelected) {
@@ -58,7 +65,27 @@ export async function createCallback(ctx: Context, next: () => any) {
                     break
                 case questionPrefix:
                     let quiz = await findQuizById(id)
-                    console.log(quiz)
+                    if (quiz.authorId !== ctx.dbuser.id) {
+                        return ctx.reply(ctx.i18n.t('something_wrong'))
+                    }
+                    let postfix = 'update'
+                    if (splitted[2] === postfix) {
+                        ctx.dbuser.selectedQuestion = quiz
+                        ctx.dbuser.state = waitQuestionState
+                        await ctx.dbuser.save()
+                        await ctx.sendMessage(ctx.i18n.t('update_question_wait', { oldQuestion: quiz.question }),
+                            { parse_mode: "MarkdownV2" })
+                        return next()
+                    }
+                    let buttons = quiz.answers.map((a, idx) => m.button.callback(a, answerPrefix + quiz._id + delimiter + idx))
+                    let kb = m.inlineKeyboard([
+                        m.button.callback(ctx.i18n.t('update_question_title'), questionPrefix + quiz._id + delimiter + postfix),
+                        ...buttons
+                    ], { columns: 1 })
+                    await ctx.sendMessage(quiz.question, kb)
+                    break
+                case answerPrefix:
+                    console.log("Edit answer:", data)
                     break
                 default:
                     return next()
@@ -67,38 +94,64 @@ export async function createCallback(ctx: Context, next: () => any) {
 }
 
 export async function waitTitleMiddleware(ctx: Context, next: () => any) {
-    if (ctx.dbuser.state === 'wait_title' && ctx.message) {
-        let text = (ctx.message as Message.TextMessage).text
-        if (text === undefined || text.length === 0) {
-            return ctx.reply(ctx.i18n.t('something_wrong'))
-        }
-        let section: Ref<Section>
-        let successMessage: string
-        if (ctx.dbuser.selectedSection) {
-            section = await findSection(ctx.dbuser.selectedSection._id)
-            successMessage = ctx.i18n.t('section_updated')
-        } else {
-            section = new SectionModel()
-            section.authorId = ctx.dbuser.id
-            successMessage = ctx.i18n.t('section_created')
-        }
-        section.title = text
-        try {
-            let newSection = await section.save()
-            ctx.dbuser.selectedSection = newSection
+    if (!ctx.message || !ctx.dbuser.state) {
+        return next()
+    }
+    let text = (ctx.message as Message.TextMessage).text
+    if (text === undefined || text.length === 0) {
+        return ctx.reply(ctx.i18n.t('something_wrong'))
+    }
+    switch (ctx.dbuser.state) {
+        case waitSectionState:
+            let section: any
+            let successMessage: string
+            if (ctx.dbuser.selectedSection) {
+                section = await findSection(ctx.dbuser.selectedSection._id)
+                if (section.authorId !== ctx.dbuser.id) {
+                    return ctx.reply(ctx.i18n.t('something_wrong'))
+                }
+                successMessage = ctx.i18n.t('section_updated')
+            } else {
+                section = new SectionModel()
+                section.authorId = ctx.dbuser.id
+                successMessage = ctx.i18n.t('section_created')
+            }
+            section.title = text
+            try {
+                let newSection = await section.save()
+                ctx.dbuser.selectedSection = newSection
+                ctx.dbuser.state = ''
+                await ctx.dbuser.save()
+                let keyboard = await selectKeyboard(ctx)
+                await ctx.reply(successMessage, keyboard)
+            } catch (e) {
+                console.log(e)
+                let msg = e["message"]
+                if (msg) {
+                    await ctx.reply(msg)
+                }
+            }
+            break
+        case waitQuestionState:
+            console.log("Edit question title for", ctx.dbuser.selectedQuestion)
+            if (!ctx.dbuser.selectedQuestion) {
+                return
+            }
+            let quiz = await findQuizById(ctx.dbuser.selectedQuestion)
+            if (quiz.authorId !== ctx.dbuser.id) {
+                return ctx.reply(ctx.i18n.t('something_wrong'))
+            }
+            let old = quiz.question
+            quiz.question = text
+            let newQuiz = await quiz.save()
+            ctx.dbuser.selectedQuestion = null
             ctx.dbuser.state = ''
             await ctx.dbuser.save()
-            let keyboard = await selectKeyboard(ctx)
-            await ctx.reply(successMessage, keyboard)
-        } catch (e) {
-            console.log(e)
-            let msg = e["message"]
-            if (msg) {
-                ctx.reply(msg)
-            }
-        }
-    } else {
-        return next()
+            await ctx.sendMessage(ctx.i18n.t('update_question_result', { oldQuestion: old, newQuestion: newQuiz.question }),
+                { parse_mode: "MarkdownV2" })
+            break
+        default:
+            return next()
     }
 }
 
@@ -124,7 +177,7 @@ export async function selectKeyboard(ctx: Context) {
 
 export async function updateSectionTitleCallback(ctx: Context, next: () => any) {
     if (ctx.callbackQuery && (ctx.callbackQuery as any).data === 'create_section_title') {
-        ctx.dbuser.state = 'wait_title'
+        ctx.dbuser.state = waitSectionState
         await ctx.dbuser.save()
         let keyboard = cancelKeyboard(ctx)
         return await ctx.editMessageText(ctx.i18n.t('create_section_title'), keyboard)

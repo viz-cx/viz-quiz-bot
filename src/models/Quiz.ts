@@ -4,7 +4,7 @@ import { Section } from './Section'
 
 @modelOptions({ schemaOptions: { collection: 'quizzes' } })
 export class Quiz extends Base<mongoose.Schema.Type.String> {
-    @prop()
+    @prop({ minlength: 1, maxlength: 255 })
     question: string
 
     @prop({ type: () => [String] })
