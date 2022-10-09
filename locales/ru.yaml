@@ -69,6 +69,8 @@ update_section_title: Изменить имя раздела.
 update_question_title: Изменить вопрос.
 update_question_wait: Введите измененный вопрос вместо `${oldQuestion}`\\.
 update_question_result: Вопрос `${oldQuestion}` успешно изменён на `${newQuestion}`\\.
+update_answer_wait: Введите измененный ответ вместо `${oldAnswer}`\\.
+update_answer_result: Ответ `${oldAnswer}` успешно изменён на `${newAnswer}`\\.
 section_created: Новый раздел успешно создан.
 section_updated: Раздел успешно изменён.
 section_not_selected: Раздел не выбран.

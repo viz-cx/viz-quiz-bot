@@ -1,14 +1,13 @@
-import { prop, getModelForClass, DocumentType, mongoose, modelOptions, Ref } from '@typegoose/typegoose'
+import { prop, getModelForClass, DocumentType, mongoose, modelOptions } from '@typegoose/typegoose'
 import { Base } from '@typegoose/typegoose/lib/defaultClasses'
-import { Section } from './Section'
 
 @modelOptions({ schemaOptions: { collection: 'quizzes' } })
 export class Quiz extends Base<mongoose.Schema.Type.String> {
     @prop({ minlength: 1, maxlength: 255 })
     question: string
 
-    @prop({ type: () => [String] })
-    answers: string[] // first is correct
+    @prop({ type: String, required: true, default: [] })
+    answers: mongoose.Types.Array<string> // first is correct
 
     @prop({ required: false })
     explanation?: string

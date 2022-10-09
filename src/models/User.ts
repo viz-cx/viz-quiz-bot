@@ -54,6 +54,9 @@ export class User {
 
   @prop({ required: false, ref: () => Quiz })
   selectedQuestion?: Ref<Quiz>
+
+  @prop({ required: false, min: 0, max: 10 })
+  selectedAnswer: number
 }
 
 export const UserModel = getModelForClass(User, {

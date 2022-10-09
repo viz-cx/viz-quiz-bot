@@ -1,12 +1,12 @@
-import { findQuizById, findQuizzesBySection } from "@/models/Quiz";
-import { findSection, getSectionsByUser, Section, SectionModel } from "@/models/Section";
-import { Ref } from "@typegoose/typegoose";
+import { findQuizById, findQuizzesBySection, QuizModel } from "@/models/Quiz";
+import { findSection, getSectionsByUser, SectionModel } from "@/models/Section";
 import { Context } from "telegraf";
 import { Markup as m } from 'telegraf';
 import { Message } from "telegraf/typings/core/types/typegram";
 
 const waitSectionState = 'wait_section'
 const waitQuestionState = 'wait_question'
+const waitAnswerState = 'wait_answer'
 
 const sectionPrefix = 'section_'
 const questionPrefix = 'question_'
@@ -77,7 +77,7 @@ export async function createCallback(ctx: Context, next: () => any) {
                             { parse_mode: "MarkdownV2" })
                         return next()
                     }
-                    let buttons = quiz.answers.map((a, idx) => m.button.callback(a, answerPrefix + quiz._id + delimiter + idx))
+                    let buttons = quiz.answers.map((a, idx) => m.button.callback((idx === 0 ? '(✅) ': '') + a, answerPrefix + quiz._id + delimiter + idx))
                     let kb = m.inlineKeyboard([
                         m.button.callback(ctx.i18n.t('update_question_title'), questionPrefix + quiz._id + delimiter + postfix),
                         ...buttons
@@ -85,7 +85,21 @@ export async function createCallback(ctx: Context, next: () => any) {
                     await ctx.sendMessage(quiz.question, kb)
                     break
                 case answerPrefix:
-                    console.log("Edit answer:", data)
+                    const answerId = Number(splitted[2])
+                    if (answerId === NaN) {
+                        return ctx.reply(ctx.i18n.t('something_wrong'))
+                    }
+                    let q = await findQuizById(id)
+                    let answer = q.answers[answerId]
+                    if (q.authorId !== ctx.dbuser.id) {
+                        return ctx.reply(ctx.i18n.t('something_wrong'))
+                    }
+                    ctx.dbuser.selectedQuestion = q
+                    ctx.dbuser.state = waitAnswerState
+                    ctx.dbuser.selectedAnswer = answerId
+                    await ctx.dbuser.save()
+                    await ctx.sendMessage(ctx.i18n.t('update_answer_wait', { oldAnswer: answer }),
+                        { parse_mode: "MarkdownV2" })
                     break
                 default:
                     return next()
@@ -135,7 +149,7 @@ export async function waitTitleMiddleware(ctx: Context, next: () => any) {
         case waitQuestionState:
             console.log("Edit question title for", ctx.dbuser.selectedQuestion)
             if (!ctx.dbuser.selectedQuestion) {
-                return
+                return ctx.reply(ctx.i18n.t('something_wrong'))
             }
             let quiz = await findQuizById(ctx.dbuser.selectedQuestion)
             if (quiz.authorId !== ctx.dbuser.id) {
@@ -148,6 +162,34 @@ export async function waitTitleMiddleware(ctx: Context, next: () => any) {
             ctx.dbuser.state = ''
             await ctx.dbuser.save()
             await ctx.sendMessage(ctx.i18n.t('update_question_result', { oldQuestion: old, newQuestion: newQuiz.question }),
+                { parse_mode: "MarkdownV2" })
+            break
+        case waitAnswerState:
+            console.log("Edit answer for", ctx.dbuser.selectedQuestion, "with id", ctx.dbuser.selectedAnswer)
+            if (!ctx.dbuser.selectedQuestion) {
+                return ctx.reply(ctx.i18n.t('something_wrong'))
+            }
+            let q = await findQuizById(ctx.dbuser.selectedQuestion)
+            if (q.authorId !== ctx.dbuser.id) {
+                return ctx.reply(ctx.i18n.t('something_wrong'))
+            }
+            let answerId = ctx.dbuser.selectedAnswer
+            if (answerId == null) {
+                return ctx.reply(ctx.i18n.t('something_wrong'))
+            }
+
+            var answers = q.answers
+            let oldAnswer = answers[answerId]
+            let newAnswer = text
+            answers[answerId] = newAnswer
+            q.answers = answers
+            await new QuizModel(q).save()
+            
+            ctx.dbuser.state = ''
+            ctx.dbuser.selectedQuestion = null
+            ctx.dbuser.selectedAnswer = null
+            await ctx.dbuser.save()
+            await ctx.sendMessage(ctx.i18n.t('update_answer_result', { oldAnswer: oldAnswer, newAnswer: newAnswer }),
                 { parse_mode: "MarkdownV2" })
             break
         default:
