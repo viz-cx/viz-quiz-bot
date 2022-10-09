@@ -1,5 +1,6 @@
-import { selectKeyboard } from '@/handlers/sendSelect'
-import { addToBalance, findQuizByPollId, findUser, QuizModel, User } from '@/models'
+import { sectionsKeyboard } from '@/handlers/sendSelect'
+import { addToBalance, findQuizByPollId, findUser, QuizModel } from '@/models'
+import { getSectionsByUser } from '@/models/Section'
 import { Context } from 'telegraf'
 import { Poll } from 'telegraf/typings/core/types/typegram'
 
@@ -24,7 +25,8 @@ export async function proposeQuiz(ctx: Context, next: () => any) {
     }
 
     if (ctx.dbuser.selectedSection === undefined) {
-        let keyboard = await selectKeyboard(ctx)
+        const sections = await getSectionsByUser(ctx.dbuser.id)
+        let keyboard = sectionsKeyboard(sections, ctx)
         return await ctx.reply(ctx.i18n.t('section_not_selected'), keyboard)
     }
 
