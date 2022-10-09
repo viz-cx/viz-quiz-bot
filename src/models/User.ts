@@ -28,7 +28,7 @@ export class User {
   @prop()
   quizId?: mongoose.Types.ObjectId // in database, current
 
-  @prop({ type: () => mongoose.Types.ObjectId })
+  @prop({ type: () => mongoose.Types.ObjectId, required: false, default: [] })
   answered: mongoose.Types.ObjectId[]
 
   @prop({ required: true, default: 0 })

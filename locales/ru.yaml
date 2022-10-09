@@ -63,13 +63,20 @@ reset_button: Сбросить
 reset_unavailable: Нельзя сбрасывать ответы так часто!
 reset: Хотите сбросить ответы и все набранные баллы?
 reset_success: Ответы успешно сброшены.
+section: |
+  Раздел: `${section}`\\.
+question: |
+  Вопрос: `${question}`\\.
 create_button: Создать раздел
 create_section_title: Введите имя раздела.
+create_answer: Добавить ответ
 update_section_title: Изменить имя раздела.
 update_question_title: Изменить вопрос.
 update_question_wait: Введите измененный вопрос вместо `${oldQuestion}`\\.
 update_question_result: Вопрос `${oldQuestion}` успешно изменён на `${newQuestion}`\\.
+create_answer_wait: Введите новый ответ.
 update_answer_wait: Введите измененный ответ вместо `${oldAnswer}`\\.
+create_answer_result: Ответ `${newAnswer}` успешно добавлен\\.
 update_answer_result: Ответ `${oldAnswer}` успешно изменён на `${newAnswer}`\\.
 section_created: Новый раздел успешно создан.
 section_updated: Раздел успешно изменён.

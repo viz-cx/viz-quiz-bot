@@ -55,7 +55,7 @@ export async function createCallback(ctx: Context, next: () => any) {
                             m.button.callback(ctx.i18n.t('update_section_title'), 'create_section_title'),
                             ...buttons
                         ], { columns: 1 })
-                        return await ctx.sendMessage(selectedSection.title, keyboard)
+                        return await ctx.sendMessage(ctx.i18n.t('section', { section: selectedSection.title }), { parse_mode: "MarkdownV2", reply_markup: keyboard.reply_markup })
                     }
                     ctx.dbuser.selectedSection = selectedSection
                     ctx.dbuser.state = ''
@@ -77,12 +77,15 @@ export async function createCallback(ctx: Context, next: () => any) {
                             { parse_mode: "MarkdownV2" })
                         return next()
                     }
-                    let buttons = quiz.answers.map((a, idx) => m.button.callback((idx === 0 ? '(✅) ': '') + a, answerPrefix + quiz._id + delimiter + idx))
+                    let buttons = quiz.answers.map((a, idx) => m.button.callback((idx === 0 ? '(✅) ' : '') + a, answerPrefix + quiz._id + delimiter + idx))
+                    if (buttons.length < 10) {
+                        buttons.push(m.button.callback(ctx.i18n.t('create_answer'), answerPrefix + quiz._id + delimiter + buttons.length))
+                    }
                     let kb = m.inlineKeyboard([
                         m.button.callback(ctx.i18n.t('update_question_title'), questionPrefix + quiz._id + delimiter + postfix),
                         ...buttons
                     ], { columns: 1 })
-                    await ctx.sendMessage(quiz.question, kb)
+                    await ctx.sendMessage(ctx.i18n.t('question', { question: quiz.question }), { parse_mode: "MarkdownV2", reply_markup: kb.reply_markup })
                     break
                 case answerPrefix:
                     const answerId = Number(splitted[2])
@@ -98,8 +101,12 @@ export async function createCallback(ctx: Context, next: () => any) {
                     ctx.dbuser.state = waitAnswerState
                     ctx.dbuser.selectedAnswer = answerId
                     await ctx.dbuser.save()
-                    await ctx.sendMessage(ctx.i18n.t('update_answer_wait', { oldAnswer: answer }),
-                        { parse_mode: "MarkdownV2" })
+                    if (answer === undefined) {
+                        await ctx.sendMessage(ctx.i18n.t('create_answer_wait'))
+                    } else {
+                        await ctx.sendMessage(ctx.i18n.t('update_answer_wait', { oldAnswer: answer }),
+                            { parse_mode: "MarkdownV2" })
+                    }
                     break
                 default:
                     return next()
@@ -107,7 +114,7 @@ export async function createCallback(ctx: Context, next: () => any) {
     }
 }
 
-export async function waitTitleMiddleware(ctx: Context, next: () => any) {
+export async function waitMiddleware(ctx: Context, next: () => any) {
     if (!ctx.message || !ctx.dbuser.state) {
         return next()
     }
@@ -184,13 +191,18 @@ export async function waitTitleMiddleware(ctx: Context, next: () => any) {
             answers[answerId] = newAnswer
             q.answers = answers
             await new QuizModel(q).save()
-            
+
             ctx.dbuser.state = ''
             ctx.dbuser.selectedQuestion = null
             ctx.dbuser.selectedAnswer = null
             await ctx.dbuser.save()
-            await ctx.sendMessage(ctx.i18n.t('update_answer_result', { oldAnswer: oldAnswer, newAnswer: newAnswer }),
-                { parse_mode: "MarkdownV2" })
+            if (oldAnswer === undefined) {
+                await ctx.sendMessage(ctx.i18n.t('create_answer_result', { newAnswer: newAnswer }),
+                    { parse_mode: "MarkdownV2" })
+            } else {
+                await ctx.sendMessage(ctx.i18n.t('update_answer_result', { oldAnswer: oldAnswer, newAnswer: newAnswer }),
+                    { parse_mode: "MarkdownV2" })
+            }
             break
         default:
             return next()
