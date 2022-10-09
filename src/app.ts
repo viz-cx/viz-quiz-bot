@@ -24,7 +24,7 @@ import { startNotifications } from './sendNotifications'
 import { difficultyEmojies, sendDifficulty, setDifficulty } from './handlers/difficulty'
 import { resetCallback, sendReset } from './handlers/sendReset'
 import { Emoji } from './helpers/keyboard'
-import { waitTitleMiddleware, createCallback, sendSelect, updateSectionTitleCallback } from './handlers/sendSelect'
+import { waitMiddleware, createCallback, sendSelect, updateSectionTitleCallback } from './handlers/sendSelect'
 import { cancelCallback } from './middlewares/cancelCallback'
 
 // Middlewares
@@ -37,7 +37,7 @@ bot.use(nextQuestionCallback)
 bot.use(proposeQuiz)
 bot.use(resetCallback)
 bot.use(createCallback)
-bot.use(waitTitleMiddleware)
+bot.use(waitMiddleware)
 bot.use(updateSectionTitleCallback)
 // Commands
 bot.command('language', sendLanguage)
