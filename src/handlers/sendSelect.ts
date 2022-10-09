@@ -51,6 +51,7 @@ export async function createCallback(ctx: Context, next: () => any) {
                     if (isAlreadySelected) {
                         let quizzes = await findQuizzesBySection(selectedSection._id)
                         let buttons = quizzes.map(q => m.button.callback(q.question, questionPrefix + q._id))
+                        buttons.push(m.button.callback(ctx.i18n.t('create_question'), questionPrefix + 'new'))
                         let keyboard = m.inlineKeyboard([
                             m.button.callback(ctx.i18n.t('update_section_title'), 'create_section_title'),
                             ...buttons
@@ -64,6 +65,13 @@ export async function createCallback(ctx: Context, next: () => any) {
                     await ctx.editMessageReplyMarkup(keyboard.reply_markup)
                     break
                 case questionPrefix:
+                    if (id === 'new') {
+                        ctx.dbuser.selectedQuestion = null
+                        ctx.dbuser.state = waitQuestionState
+                        await ctx.dbuser.save()
+                        await ctx.sendMessage(ctx.i18n.t('create_question_wait'), { parse_mode: "MarkdownV2" })
+                        return
+                    }
                     let quiz = await findQuizById(id)
                     if (quiz.authorId !== ctx.dbuser.id) {
                         return ctx.reply(ctx.i18n.t('something_wrong'))
@@ -154,9 +162,29 @@ export async function waitMiddleware(ctx: Context, next: () => any) {
             }
             break
         case waitQuestionState:
-            console.log("Edit question title for", ctx.dbuser.selectedQuestion)
-            if (!ctx.dbuser.selectedQuestion) {
-                return ctx.reply(ctx.i18n.t('something_wrong'))
+            if (!ctx.dbuser.selectedQuestion) { // new question
+                console.log(text)
+                let quiz = new QuizModel()
+                let answers = text.split('\n')
+                let question = answers.shift()
+                if (answers.length < 2) {
+                    return ctx.reply(ctx.i18n.t('create_question_min'))
+                }
+                if (answers.length > 10) {
+                    return ctx.reply(ctx.i18n.t('create_question_max'))
+                }
+                quiz.question = question
+                quiz.answers = answers
+                quiz.authorId = ctx.dbuser.id
+                quiz.sectionId = ctx.dbuser.selectedSection
+                await quiz.save()
+
+                ctx.dbuser.selectedQuestion = null
+                ctx.dbuser.state = ''
+                await ctx.dbuser.save()
+
+                await ctx.sendMessage(ctx.i18n.t('create_question_result'))
+                return
             }
             let quiz = await findQuizById(ctx.dbuser.selectedQuestion)
             if (quiz.authorId !== ctx.dbuser.id) {

@@ -15,8 +15,8 @@ export class Quiz extends Base<mongoose.Schema.Type.String> {
     @prop({ required: true })
     authorId: number
 
-    @prop({ required: false, unique: true, sparse: true })
-    pollId: string // in telegram, against duplicates
+    @prop({ type: String, required: false, unique: true, sparse: true })
+    pollId?: String // in telegram, against duplicates
 
     @prop({ required: false })
     sectionId?: mongoose.Types.ObjectId

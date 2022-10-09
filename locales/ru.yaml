@@ -70,6 +70,20 @@ question: |
 create_button: Создать раздел
 create_section_title: Введите имя раздела.
 create_answer: Добавить ответ
+create_question: Добавить вопрос
+create_question_wait: |
+  Добавьте новый вопрос в формате:
+
+  ```
+  Заголовок вопроса со знаком ? в конце
+  Правильный ответ
+  Неправильный ответ
+  Неправильный ответ
+  (до 10 ответов)
+  ```
+create_question_min: Нужно минимум два ответа!
+create_question_max: Слишком много ответов!
+create_question_result: Вопрос успешно добавлен.
 update_section_title: Изменить имя раздела.
 update_question_title: Изменить вопрос.
 update_question_wait: Введите измененный вопрос вместо `${oldQuestion}`\\.
