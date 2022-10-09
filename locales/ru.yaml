@@ -24,6 +24,7 @@ results_button: Вывести
 difficulty_button: Сложность
 select_button: Выбор
 cancel_button: Отменить
+back: Назад
 results: |
   Текущий баланс: ${balance} баллов (<b>≈${viz} Ƶ</b>)
 
