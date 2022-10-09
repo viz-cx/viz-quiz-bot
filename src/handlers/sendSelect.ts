@@ -115,10 +115,10 @@ export async function createCallback(ctx: Context, next: () => any) {
                     ctx.dbuser.selectedAnswer = answerId
                     await ctx.dbuser.save()
                     if (answer === undefined) {
-                        await ctx.sendMessage(ctx.i18n.t('create_answer_wait'))
+                        await ctx.sendMessage(ctx.i18n.t('create_answer_wait'), cancelKeyboard(ctx))
                     } else {
                         await ctx.sendMessage(ctx.i18n.t('update_answer_wait', { oldAnswer: answer }),
-                            { parse_mode: "MarkdownV2" })
+                            { parse_mode: "MarkdownV2", reply_markup: cancelKeyboard(ctx).reply_markup })
                     }
                     break
                 default:
@@ -277,10 +277,10 @@ export function sectionsKeyboard(sections: DocumentType<Section[]>, ctx: Context
 function questionsKeyboard(quizzes: DocumentType<Quiz[]>, ctx: Context): Markup.Markup<InlineKeyboardMarkup> {
     let buttons = quizzes.map((q: DocumentType<Quiz>) => m.button.callback(q.question, questionPrefix + q._id))
     let keyboard = m.inlineKeyboard([
-        m.button.callback('◀️' + ctx.i18n.t('back'), 'back_sections'),
-        m.button.callback(ctx.i18n.t('update_section_title'), 'create_section_title'),
-        ...buttons,
-        m.button.callback(ctx.i18n.t('create_question'), questionPrefix + 'new')
+        m.button.callback('◀️ ' + ctx.i18n.t('back'), 'back_sections'),
+        m.button.callback('✍️ ' + ctx.i18n.t('update_section_title'), 'create_section_title'),
+        m.button.callback('👊 ' + ctx.i18n.t('create_question'), questionPrefix + 'new'),
+        ...buttons
     ], { columns: 2 })
     return keyboard
 }
@@ -291,8 +291,8 @@ function answersKeyboard(quiz: Quiz, ctx: Context): Markup.Markup<InlineKeyboard
         buttons.push(m.button.callback(ctx.i18n.t('create_answer'), answerPrefix + quiz._id + delimiter + buttons.length))
     }
     let keyboard = m.inlineKeyboard([
-        m.button.callback('◀️' + ctx.i18n.t('back'), 'back_questions'),
-        m.button.callback(ctx.i18n.t('update_question_title'), questionPrefix + quiz._id + delimiter + 'update'),
+        m.button.callback('◀️ ' + ctx.i18n.t('back'), 'back_questions'),
+        m.button.callback('✍️ ' + ctx.i18n.t('update_question_title'), questionPrefix + quiz._id + delimiter + 'update'),
         ...buttons
     ], { columns: 2 })
     return keyboard

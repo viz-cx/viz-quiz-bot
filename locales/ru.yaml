@@ -85,8 +85,8 @@ create_question_wait: |
 create_question_min: Нужно минимум два ответа!
 create_question_max: Слишком много ответов!
 create_question_result: Вопрос успешно добавлен.
-update_section_title: Изменить имя раздела.
-update_question_title: Изменить вопрос.
+update_section_title: Изменить раздел
+update_question_title: Изменить вопрос
 update_question_wait: Введите измененный вопрос вместо `${oldQuestion}`\\.
 update_question_result: Вопрос `${oldQuestion}` успешно изменён на `${newQuestion}`\\.
 create_answer_wait: Введите новый ответ.
