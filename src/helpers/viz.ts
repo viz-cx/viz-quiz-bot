@@ -1,7 +1,9 @@
-import viz from "viz-js-lib"
-
 export class VIZ {
-    constructor() {
+    private static vizJS = require("viz-js-lib")
+
+    static origin = new VIZ()
+
+    private constructor() {
         this.changeNode()
     }
 
@@ -11,11 +13,11 @@ export class VIZ {
             'https://viz.lexai.host/',
             'https://api.viz.world/'
         ]
-        const oldNode = viz.config.get('websocket')
+        const oldNode = VIZ.vizJS.config.get('websocket')
         nodes = nodes.filter(e => e !== oldNode)
         const node = nodes[Math.floor(Math.random() * nodes.length)]
         console.log('Change public node from %s to %s', oldNode, node)
-        viz.config.set('websocket', node)
+        VIZ.vizJS.config.set('websocket', node)
     }
 
     public pay(to: string, amount: number) {
@@ -32,7 +34,7 @@ export class VIZ {
             if (referrer) {
                 beneficiaries.push({ account: referrer, weight: 1000 })
             }
-            viz.broadcast.award(
+            VIZ.vizJS.broadcast.award(
                 wif,
                 from,
                 receiver,
@@ -45,7 +47,7 @@ export class VIZ {
                         reject(err)
                         return
                     }
-                    viz.api.getDynamicGlobalProperties(function (err, dgp) {
+                    VIZ.vizJS.api.getDynamicGlobalProperties(function (err, dgp) {
                         if (err) {
                             reject(err)
                         } else {
@@ -72,18 +74,18 @@ export class VIZ {
         for (var i = 0, n = charset.length; i < length; ++i) {
             ret += charset.charAt(Math.floor(Math.random() * n))
         }
-        let wif = viz.auth.toWif('', ret, '')
+        let wif = VIZ.vizJS.auth.toWif('', ret, '')
         return wif
     }
 
     public wifToPublic(wif: string): string {
-        let publicKey = viz.auth.wifToPublic(wif)
+        let publicKey = VIZ.vizJS.auth.wifToPublic(wif)
         return publicKey
     }
 
     public getAccount(login: string): Promise<Object> {
         return new Promise((resolve, reject) => {
-            viz.api.getAccounts([login], function (err, result) {
+            VIZ.vizJS.api.getAccounts([login], function (err, result) {
                 if (err) {
                     reject(err)
                 } else {
@@ -117,7 +119,7 @@ export class VIZ {
 
     private unstake(wif: string, username: string, shares: string) {
         return new Promise((resolve, reject) => {
-            viz.broadcast.withdrawVesting(
+            VIZ.vizJS.broadcast.withdrawVesting(
                 wif,
                 username,
                 shares,
@@ -133,7 +135,7 @@ export class VIZ {
 
     public createInvite(wif: string, creator: string, balance: string, invite_key: string): Promise<Object> {
         return new Promise((resolve, reject) => {
-            viz.broadcast.createInvite(wif, creator, balance, invite_key, function (err, result) {
+            VIZ.vizJS.broadcast.createInvite(wif, creator, balance, invite_key, function (err, result) {
                 if (err) {
                     reject(err)
                 } else {
@@ -145,7 +147,7 @@ export class VIZ {
 
     isAccountExists(login: string): Promise<boolean> {
         return new Promise((resolve, reject) => {
-            viz.api.getAccounts([login], function (err, result) {
+            VIZ.vizJS.api.getAccounts([login], function (err, result) {
                 if (err) {
                     reject(err)
                 } else {
@@ -157,7 +159,7 @@ export class VIZ {
 
     getDynamicGlobalProperties(): Promise<Object> {
         return new Promise((resolve, reject) => {
-            viz.api.getDynamicGlobalProperties(function (err, result) {
+            VIZ.vizJS.api.getDynamicGlobalProperties(function (err, result) {
                 if (err) {
                     reject(err)
                 } else {
@@ -169,7 +171,7 @@ export class VIZ {
 
     getBlockHeader(blockID: number): Promise<Object> {
         return new Promise((resolve, reject) => {
-            viz.api.getBlockHeader(blockID, function (err, result) {
+            VIZ.vizJS.api.getBlockHeader(blockID, function (err, result) {
                 if (err) {
                     reject(err)
                 } else {
@@ -182,7 +184,7 @@ export class VIZ {
     getOpsInBlock(blockID: number, onlyVirtual: Boolean = true): Promise<Object> {
         const virtualOpsOnly = onlyVirtual ? 1 : 0
         return new Promise((resolve, reject) => {
-            viz.api.getOpsInBlock(blockID, virtualOpsOnly, function (err, result) {
+            VIZ.vizJS.api.getOpsInBlock(blockID, virtualOpsOnly, function (err, result) {
                 if (err) {
                     reject(err)
                 } else {
@@ -192,9 +194,9 @@ export class VIZ {
         })
     }
 
-    private transferToVesting(wif, from, to, amount: string): Promise<Object> {
+    private transferToVesting(wif: string, from: string, to: string, amount: string): Promise<Object> {
         return new Promise((resolve, reject) => {
-            viz.broadcast.transferToVesting(wif, from, to, amount, function (err, result) {
+            VIZ.vizJS.broadcast.transferToVesting(wif, from, to, amount, function (err, result) {
                 if (err) {
                     reject(err)
                 } else {

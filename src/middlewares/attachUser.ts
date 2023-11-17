@@ -2,10 +2,8 @@ import { VIZ } from '@/helpers/viz'
 import { findUserByPollId, getOrCreateUser } from '@/models/index'
 import { Context } from 'telegraf'
 
-const viz = new VIZ()
-
 export async function attachUser(ctx: Context, next) {
-  ctx.viz = viz
+  ctx.viz = VIZ.origin
   if (ctx.poll) {
     ctx.dbuser = await findUserByPollId(ctx.poll.id)
     if (ctx.dbuser !== null) {

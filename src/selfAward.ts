@@ -1,7 +1,5 @@
 import { VIZ } from "./helpers/viz"
 
-const viz = new VIZ()
-
 export async function startSelfAwarding() {
     const hours = randomFromInterval(5, 50)
     setTimeout(() => {
@@ -13,7 +11,7 @@ export async function startSelfAwarding() {
 async function makeSelfAward() {
     const account = process.env.ACCOUNT
     const wif = process.env.WIF
-    viz.getAccount(account).then(data => {
+    VIZ.origin.getAccount(account).then(data => {
         let last_vote_time = Date.parse(data['last_vote_time'])
         let delta_time = (new Date().getTime() - last_vote_time + (new Date().getTimezoneOffset() * 60000)) / 1000
         let energy = data['energy']
@@ -22,7 +20,7 @@ async function makeSelfAward() {
             new_energy = 10000
         }
         console.log("Make self award with energy", energy)
-        viz.award(account, account, wif, energy, "", null, account).catch(_ => viz.changeNode())
+        VIZ.origin.award(account, account, wif, energy, "", null, account).catch(_ => VIZ.origin.changeNode())
     })
 }
 

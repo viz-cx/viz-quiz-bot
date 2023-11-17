@@ -102,7 +102,7 @@ export async function createCallback(ctx: Context, next: () => any) {
                     break
                 case answerPrefix:
                     const answerId = Number(splitted[2])
-                    if (answerId === NaN) {
+                    if (Number.isNaN(answerId)) {
                         return ctx.reply(ctx.i18n.t('something_wrong'))
                     }
                     let q = await findQuizById(id)
