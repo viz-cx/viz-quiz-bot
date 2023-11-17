@@ -1,4 +1,4 @@
-import { sendMainKeyboard } from "@/helpers/keyboard";
+import { CancelCallback } from "@/middlewares/cancelCallback";
 import { findQuizById, findQuizzesBySection, Quiz, QuizModel } from "@/models/Quiz";
 import { findSection, getSectionsByUser, Section, SectionModel } from "@/models/Section";
 import { DocumentType } from "@typegoose/typegoose/lib/types";
@@ -45,7 +45,7 @@ export async function createCallback(ctx: Context, next: () => any) {
             ctx.dbuser.selectedSection = undefined
             ctx.dbuser.state = waitSectionState
             await ctx.dbuser.save()
-            let keyboard = cancelKeyboard(ctx)
+            let keyboard = cancelKeyboard(ctx, CancelCallback.cancel_section)
             return await ctx.editMessageText(ctx.i18n.t('create_section_title'), keyboard)
         default:
             const splitted = data.split(delimiter)
@@ -115,10 +115,10 @@ export async function createCallback(ctx: Context, next: () => any) {
                     ctx.dbuser.selectedAnswer = answerId
                     await ctx.dbuser.save()
                     if (answer === undefined) {
-                        await ctx.sendMessage(ctx.i18n.t('create_answer_wait'), cancelKeyboard(ctx))
+                        await ctx.sendMessage(ctx.i18n.t('create_answer_wait'), cancelKeyboard(ctx, CancelCallback.cancel_question))
                     } else {
                         await ctx.sendMessage(ctx.i18n.t('update_answer_wait', { oldAnswer: answer }),
-                            { parse_mode: "MarkdownV2", reply_markup: cancelKeyboard(ctx).reply_markup })
+                            { parse_mode: "MarkdownV2", reply_markup: cancelKeyboard(ctx, CancelCallback.cancel_question).reply_markup })
                     }
                     break
                 default:
@@ -172,10 +172,10 @@ export async function waitMiddleware(ctx: Context, next: () => any) {
                 let answers = text.split('\n')
                 let question = answers.shift()
                 if (answers.length < 2) {
-                    return ctx.reply(ctx.i18n.t('create_question_min'), cancelKeyboard(ctx))
+                    return ctx.reply(ctx.i18n.t('create_question_min'), cancelKeyboard(ctx, CancelCallback.cancel_question))
                 }
                 if (answers.length > 10) {
-                    return ctx.reply(ctx.i18n.t('create_question_max'), cancelKeyboard(ctx))
+                    return ctx.reply(ctx.i18n.t('create_question_max'), cancelKeyboard(ctx, CancelCallback.cancel_question))
                 }
                 let quiz = new QuizModel()
                 quiz.question = question
@@ -250,15 +250,15 @@ export async function updateSectionTitleCallback(ctx: Context, next: () => any) 
     if (ctx.callbackQuery && (ctx.callbackQuery as any).data === 'create_section_title') {
         ctx.dbuser.state = waitSectionState
         await ctx.dbuser.save()
-        let keyboard = cancelKeyboard(ctx)
+        let keyboard = cancelKeyboard(ctx, CancelCallback.cancel_section)
         return await ctx.editMessageText(ctx.i18n.t('create_section_title'), keyboard)
     } else {
         return next()
     }
 }
 
-function cancelKeyboard(ctx: Context) {
-    return m.inlineKeyboard([m.button.callback(ctx.i18n.t('cancel_button'), 'cancel')])
+function cancelKeyboard(ctx: Context, data: CancelCallback = CancelCallback.cancel) {
+    return m.inlineKeyboard([m.button.callback(ctx.i18n.t('cancel_button'), data)])
 }
 
 export function sectionsKeyboard(sections: DocumentType<Section[]>, ctx: Context): Markup.Markup<InlineKeyboardMarkup> {
@@ -274,7 +274,7 @@ export function sectionsKeyboard(sections: DocumentType<Section[]>, ctx: Context
     return m.inlineKeyboard(buttons, { columns: 1 })
 }
 
-function questionsKeyboard(quizzes: DocumentType<Quiz[]>, ctx: Context): Markup.Markup<InlineKeyboardMarkup> {
+export function questionsKeyboard(quizzes: DocumentType<Quiz[]>, ctx: Context): Markup.Markup<InlineKeyboardMarkup> {
     let buttons = quizzes.map((q: DocumentType<Quiz>) => m.button.callback(q.question, questionPrefix + q._id))
     let keyboard = m.inlineKeyboard([
         m.button.callback('◀️ ' + ctx.i18n.t('back'), 'back_sections'),
