@@ -48,3 +48,17 @@ export async function findUnasweredQuizzes(answeredIds: mongoose.Types.ObjectId[
 export async function getQuizCountAfterDate(date: Date = new Date(0)): Promise<number> {
     return await QuizModel.countDocuments({ createdAt: { $gte: date } }).exec()
 }
+
+export async function findUnansweredQuizzesInSection(
+    sectionId: mongoose.Types.ObjectId,
+    answeredIds: mongoose.Types.ObjectId[]
+): Promise<DocumentType<Quiz>> {
+    return await QuizModel.aggregate([
+        { $match: { sectionId: sectionId, _id: { $nin: answeredIds } } },
+        { $sample: { size: 10 } }
+    ])
+}
+
+export async function getQuizCountBySection(sectionId: mongoose.Types.ObjectId): Promise<number> {
+    return await QuizModel.countDocuments({ sectionId }).exec()
+}

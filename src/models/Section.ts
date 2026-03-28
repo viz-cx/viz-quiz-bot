@@ -11,7 +11,11 @@ export class Section {
     @prop({ required: true })
     authorId: number
 
-    // TODO: rating to sort sections
+    @prop({ required: true, default: false })
+    isPublic: boolean
+
+    @prop({ required: false, maxlength: 200 })
+    description?: string
 }
 
 export const SectionModel = getModelForClass(Section, {
@@ -24,4 +28,8 @@ export async function getSectionsByUser(authorId: number): Promise<DocumentType<
 
 export async function findSection(id: string): Promise<DocumentType<Section>> {
     return await SectionModel.findOne({ _id: id }).exec()
+}
+
+export async function getPublicSections(): Promise<DocumentType<Section[]>> {
+    return await SectionModel.find({ isPublic: true }).sort({ updatedAt: -1 }).exec()
 }

@@ -1,16 +1,47 @@
 import { addToBalance, findUser } from "@/models/User"
+import { findSection } from "@/models/Section"
+import { upsertTopicMembership } from "@/models/TopicMembership"
 import { Context, Telegraf } from "telegraf"
 import { sendMainKeyboard } from "@/helpers/keyboard"
+import { mongoose } from "@typegoose/typegoose"
+
+const TOPIC_INVITE_PREFIX = 't_'
 
 export function setupStart(bot: Telegraf<Context>) {
-    bot.start((ctx) => {
+    bot.start(async (ctx) => {
         const payload: string = (ctx as any)['startPayload']
-        const referrer = parseInt(payload)
         var user = ctx.dbuser
         if (!user) {
             console.log('User not found!')
             return sendMainKeyboard(ctx)
         }
+
+        // Handle topic invite: ?start=t_<sectionId>_<inviterId>
+        if (payload && payload.startsWith(TOPIC_INVITE_PREFIX)) {
+            const parts = payload.slice(TOPIC_INVITE_PREFIX.length).split('_')
+            if (parts.length === 2) {
+                const sectionId = parts[0]
+                const inviterId = parseInt(parts[1])
+                if (sectionId && !isNaN(inviterId)) {
+                    try {
+                        const section = await findSection(sectionId)
+                        if (section) {
+                            const sid = new mongoose.Types.ObjectId(sectionId)
+                            await upsertTopicMembership(sid, user.id, inviterId)
+                            user.activeTopicSection = section
+                            await user.save()
+                            await ctx.replyWithHTML(ctx.i18n.t('topic_invite_joined', { topic: section.title }))
+                        }
+                    } catch (e) {
+                        console.error('Topic invite error:', e)
+                    }
+                }
+            }
+            return sendMainKeyboard(ctx)
+        }
+
+        // Handle bot-level referral: ?start=<userId>
+        const referrer = parseInt(payload)
         if (!user.referrer && !isNaN(referrer)) {
             if (user.id !== referrer) {
                 findUser(referrer)

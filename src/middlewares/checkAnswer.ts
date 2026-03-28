@@ -1,4 +1,7 @@
 import { Difficulty, User } from '@/models'
+import { addToBalance, findUser } from '@/models/User'
+import { findQuizById } from '@/models/Quiz'
+import { getInviterForTopic } from '@/models/TopicMembership'
 import { Context } from 'telegraf'
 
 export const nextQuestionKeyboard = {
@@ -40,26 +43,93 @@ export async function checkAnswer(ctx: Context, next: () => any) {
         let isCorrectAnswer = (answerID === ctx.poll.correct_option_id)
         if (allVotesCount === 1 && isCorrectAnswer) {
             const baseValue = 100
-            let addValue = baseValue + (baseValue / 10 * user.multiplier)
+            let totalReward = baseValue + (baseValue / 10 * user.multiplier)
             switch ((ctx.dbuser as User).difficulty) {
                 case Difficulty.Easy:
-                    addValue = addValue * 0.5
+                    totalReward = totalReward * 0.5
                     break
                 case Difficulty.Hard:
-                    addValue = addValue * 1.5
+                    totalReward = totalReward * 1.5
                     break
                 case Difficulty.Nightmare:
-                    addValue = addValue * 2
+                    totalReward = totalReward * 2
                     break
                 default:
-                    addValue = addValue * 1
+                    totalReward = totalReward * 1
                     break
             }
-            user.balance = user.balance + addValue
+
+            // Determine inviter for this quiz's section
+            let inviterId = 0
+            let authorId: number | null = null
+            if (user.quizId) {
+                const quiz = await findQuizById(user.quizId.toString())
+                if (quiz) {
+                    authorId = quiz.authorId
+                    if (quiz.sectionId) {
+                        inviterId = await getInviterForTopic(quiz.sectionId, user.id)
+                    }
+                }
+            }
+
+            // Distribute rewards
+            const hasInviter = inviterId > 0 && inviterId !== user.id
+            const hasAuthor = authorId !== null && authorId !== user.id
+
+            let solverReward: number
+            let authorReward: number
+            let inviterReward: number
+
+            if (hasInviter) {
+                // Topic invite mode: 25% solver, 50% author, 25% inviter
+                solverReward = totalReward * 0.25
+                authorReward = totalReward * 0.50
+                inviterReward = totalReward * 0.25
+            } else {
+                // Free-play or no inviter: 50% solver, 50% author
+                solverReward = totalReward * 0.50
+                authorReward = totalReward * 0.50
+                inviterReward = 0
+            }
+
+            // Pay solver
+            user.balance = user.balance + solverReward
             user.multiplier = user.multiplier + 1
-            console.log(`Add ${addValue} to ${user.id} for right answer (now ${user.balance})`)
-            let payload = { score: addValue, balance: user.balance }
-            ctx.telegram.sendMessage(ctx.dbuser.id, ctx.i18n.t('success_pay_for_answer', payload))
+            console.log(`Add ${solverReward} to solver ${user.id} (total reward ${totalReward}, now ${user.balance})`)
+            ctx.telegram.sendMessage(user.id, ctx.i18n.t('success_pay_for_answer', { score: Math.round(solverReward), balance: Math.round(user.balance) }))
+
+            // Pay author (background, if different from solver)
+            if (authorId !== null && authorId !== user.id) {
+                addToBalance(authorId, authorReward).then(() => {
+                    findUser(authorId).then(author => {
+                        if (author) {
+                            ctx.telegram.sendMessage(author.id, ctx.i18n.t('success_pay_for_quiz_answer', {
+                                score: Math.round(authorReward),
+                                balance: Math.round(author.balance)
+                            }))
+                        }
+                    })
+                })
+            } else if (authorId === user.id) {
+                // Solver is also the author — add both portions to the same user
+                user.balance = user.balance + authorReward
+                console.log(`Solver is also author — added ${authorReward} more (now ${user.balance})`)
+            }
+
+            // Pay inviter (background, if present and different from solver)
+            if (hasInviter) {
+                addToBalance(inviterId, inviterReward).then(() => {
+                    findUser(inviterId).then(inviter => {
+                        if (inviter) {
+                            ctx.telegram.sendMessage(inviter.id, ctx.i18n.t('success_pay_as_inviter', {
+                                score: Math.round(inviterReward),
+                                balance: Math.round(inviter.balance)
+                            }))
+                        }
+                    })
+                })
+            }
+
             user.answered.push(user.quizId)
         } else {
             console.log(`Incorrect answer for user ${user.id}`)

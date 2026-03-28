@@ -7,7 +7,8 @@ export enum Emoji {
     Select = '🔬',
     Difficulty = '⌛️',
     Withdrawal = '🏦',
-    Cheque = '💰'
+    Cheque = '💰',
+    Catalogue = '📚'
 }
 
 export function sendMainKeyboard(ctx: Context) {
@@ -28,9 +29,11 @@ export function mainKeyboard(language: string) {
     const select = buttonByEmoji(Emoji.Select, language)
     const difficulty = buttonByEmoji(Emoji.Difficulty, language)
     const withdrawal = buttonByEmoji(Emoji.Withdrawal, language)
+    const catalogue = buttonByEmoji(Emoji.Catalogue, language)
     return m.keyboard([
         [quiz, select],
-        [difficulty, withdrawal]
+        [difficulty, withdrawal],
+        [catalogue]
     ]).resize()
 }
 
@@ -44,5 +47,7 @@ function buttonByEmoji(emoji: Emoji, language: string): InlineKeyboardButton.Cal
             return m.button.callback(emoji + ' ' + i18n.t(language, 'difficulty_button'), '')
         case Emoji.Withdrawal:
             return m.button.callback(emoji + ' ' + i18n.t(language, 'results_button'), '')
+        case Emoji.Catalogue:
+            return m.button.callback(emoji + ' ' + i18n.t(language, 'catalogue_button'), '')
     }
 }

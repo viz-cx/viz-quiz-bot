@@ -26,6 +26,7 @@ import { resetCallback, sendReset } from './handlers/sendReset'
 import { Emoji } from './helpers/keyboard'
 import { waitMiddleware, createCallback, sendSelect, updateSectionTitleCallback } from './handlers/sendSelect'
 import { cancelCallback } from './middlewares/cancelCallback'
+import { sendCatalogue, handleExitTopic } from './handlers/sendCatalogue'
 
 // Middlewares
 bot.use(ignoreOldMessageUpdates)
@@ -47,6 +48,7 @@ bot.command('reset', sendReset)
 bot.action(localeActions, setLanguage)
 bot.action(difficultyEmojies, setDifficulty)
 bot.action(Emoji.Cheque, makeCheque)
+bot.action('exit_topic', handleExitTopic)
 // Errors
 bot.catch(console.error)
 // Hears
@@ -54,6 +56,7 @@ bot.hears(new RegExp(Emoji.Quiz + ' .*'), async ctx => sendQuiz(ctx))
 bot.hears(new RegExp(Emoji.Select + ' .*'), async ctx => sendSelect(ctx))
 bot.hears(new RegExp(Emoji.Difficulty + ' .*'), async ctx => sendDifficulty(ctx))
 bot.hears(new RegExp(Emoji.Withdrawal + ' .*'), async ctx => sendResults(ctx))
+bot.hears(new RegExp(Emoji.Catalogue + ' .*'), async ctx => sendCatalogue(ctx))
 // Start bot
 setupStart(bot)
 

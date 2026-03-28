@@ -57,7 +57,7 @@ export async function proposeQuiz(ctx: Context, next: () => any) {
     quiz.sectionId = ctx.dbuser.selectedSection
     await quiz.save()
         .then(quiz => {
-            // payToAuthor(quiz.authorId, ctx)
+            payToAuthor(quiz.authorId, ctx)
             ctx.reply(ctx.i18n.t('success_added'))
         })
         .catch(err => {

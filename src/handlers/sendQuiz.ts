@@ -1,7 +1,16 @@
-import { findQuizById, findUnasweredQuizzes, Quiz } from "@/models/Quiz"
+import { findQuizById, findUnasweredQuizzes, findUnansweredQuizzesInSection, Quiz } from "@/models/Quiz"
 import { Context } from "telegraf"
 import { nextQuestionKeyboard } from "@/middlewares/checkAnswer"
 import { Difficulty, findUser, User } from "@/models"
+import { DocumentType } from "@typegoose/typegoose/lib/types"
+import { mongoose } from "@typegoose/typegoose"
+
+const exitTopicKeyboard = {
+    inline_keyboard: [
+        [{ text: "Следующий квиз", callback_data: "next_quiz" }],
+        [{ text: "🔙 Выйти из темы", callback_data: "exit_topic" }]
+    ]
+}
 
 export async function sendQuiz(ctx: Context) {
     deletePreviousMessage(ctx)
@@ -9,17 +18,39 @@ export async function sendQuiz(ctx: Context) {
     if (answeredQuizzes === null) {
         answeredQuizzes = []
     }
-    let unansweredQuizzes = await findUnasweredQuizzes(answeredQuizzes)
-    if (unansweredQuizzes.length === 0) {
-        let replyMsg = ctx.reply(ctx.i18n.t('no_unanswered_quizzes'), { reply_markup: nextQuestionKeyboard })
-        replyMsg.then(msg => {
-            let user = ctx.dbuser
-            user.quizMessageId = msg.message_id
-            user.quizId = null
-            user.save()
-        })
-        return
+
+    // Topic mode: pull quizzes from the active section only
+    const activeTopic = ctx.dbuser.activeTopicSection
+    let unansweredQuizzes: any
+
+    if (activeTopic) {
+        const sectionId = new mongoose.Types.ObjectId(activeTopic.toString())
+        unansweredQuizzes = await findUnansweredQuizzesInSection(sectionId, answeredQuizzes)
+        if (unansweredQuizzes.length === 0) {
+            const replyMsg = ctx.reply(ctx.i18n.t('topic_exhausted'), { reply_markup: exitTopicKeyboard })
+            replyMsg.then(msg => {
+                let user = ctx.dbuser
+                user.quizMessageId = msg.message_id
+                user.quizId = null
+                user.save()
+            })
+            return
+        }
+    } else {
+        // Free-play mode: all sections
+        unansweredQuizzes = await findUnasweredQuizzes(answeredQuizzes)
+        if (unansweredQuizzes.length === 0) {
+            let replyMsg = ctx.reply(ctx.i18n.t('no_unanswered_quizzes'), { reply_markup: nextQuestionKeyboard })
+            replyMsg.then(msg => {
+                let user = ctx.dbuser
+                user.quizMessageId = msg.message_id
+                user.quizId = null
+                user.save()
+            })
+            return
+        }
     }
+
     let randomQuiz: Quiz
     if (ctx.dbuser.quizId !== null) {
         randomQuiz = await findQuizById(ctx.dbuser.quizId)

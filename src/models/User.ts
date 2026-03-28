@@ -52,6 +52,9 @@ export class User {
   @prop({ required: false, ref: () => Section })
   selectedSection?: Ref<Section>
 
+  @prop({ required: false, ref: () => Section })
+  activeTopicSection?: Ref<Section>
+
   @prop({ required: false, ref: () => Quiz })
   selectedQuestion?: Ref<Quiz>
 

@@ -97,3 +97,17 @@ update_answer_result: Ответ `${oldAnswer}` успешно изменён н
 section_created: Новый раздел успешно создан.
 section_updated: Раздел успешно изменён.
 section_not_selected: Раздел не выбран.
+catalogue_button: Каталог
+catalogue_title: "📚 Публичные темы:"
+catalogue_empty: В каталоге пока нет публичных тем.
+share_topic: Поделиться темой
+make_public: Сделать публичной
+make_private: Сделать приватной
+topic_now_public: Тема теперь публична и видна в каталоге.
+topic_now_private: Тема теперь приватна.
+topic_link: "Пригласительная ссылка для темы «${topic}»:\n${link}"
+topic_invite_joined: "Вы присоединились к теме «${topic}»! Нажмите «🧠 Квиз» чтобы начать."
+topic_exhausted: Вы прошли все квизы в этой теме! Хотите выйти в общий режим?
+topic_exit_done: Вы вышли из темы. Теперь квизы снова из всех разделов.
+success_pay_for_quiz_answer: "Ваш квиз решён — вы получаете ${score} баллов (50%). Баланс: ${balance}"
+success_pay_as_inviter: "По вашей ссылке решён квиз — вы получаете ${score} баллов (25%). Баланс: ${balance}"

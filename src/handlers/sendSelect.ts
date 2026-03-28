@@ -5,6 +5,7 @@ import { DocumentType } from "@typegoose/typegoose/lib/types";
 import { Context, Markup } from "telegraf";
 import { Markup as m } from 'telegraf';
 import { InlineKeyboardMarkup, Message } from "telegraf/typings/core/types/typegram";
+import { mongoose } from "@typegoose/typegoose";
 
 const delimiter = '_'
 
@@ -37,10 +38,10 @@ export async function createCallback(ctx: Context, next: () => any) {
         case 'back_questions':
             ctx.dbuser.state = ''
             await ctx.dbuser.save()
-            let section = await findSection(ctx.dbuser.selectedSection)
-            let quizzes = await findQuizzesBySection(ctx.dbuser.selectedSection)
-            let kb = questionsKeyboard(quizzes, ctx)
-            return await ctx.sendMessage(ctx.i18n.t('section', { section: section.title }), { parse_mode: "MarkdownV2", reply_markup: kb.reply_markup })
+            const backSection = await findSection(ctx.dbuser.selectedSection as any)
+            let quizzes = await findQuizzesBySection(ctx.dbuser.selectedSection as any)
+            let kb = questionsKeyboard(quizzes, backSection, ctx)
+            return await ctx.sendMessage(ctx.i18n.t('section', { section: backSection.title }), { parse_mode: "MarkdownV2", reply_markup: kb.reply_markup })
         case 'create_button':
             ctx.dbuser.selectedSection = undefined
             ctx.dbuser.state = waitSectionState
@@ -67,7 +68,7 @@ export async function createCallback(ctx: Context, next: () => any) {
                         && ctx.dbuser.selectedSection.equals(selectedSection.id.toString())
                     if (isAlreadySelected) {
                         let quizzes = await findQuizzesBySection(selectedSection._id)
-                        let keyboard = questionsKeyboard(quizzes, ctx)
+                        let keyboard = questionsKeyboard(quizzes, selectedSection, ctx)
                         return await ctx.sendMessage(ctx.i18n.t('section', { section: selectedSection.title }), { parse_mode: "MarkdownV2", reply_markup: keyboard.reply_markup })
                     }
                     ctx.dbuser.selectedSection = selectedSection
@@ -77,6 +78,33 @@ export async function createCallback(ctx: Context, next: () => any) {
                     let keyboard = sectionsKeyboard(sections, ctx)
                     await ctx.editMessageReplyMarkup(keyboard.reply_markup)
                     break
+                case 'share_':
+                    const shareSection = await findSection(id)
+                    if (shareSection.authorId !== ctx.dbuser.id) {
+                        return ctx.reply(ctx.i18n.t('something_wrong'))
+                    }
+                    const shareLink = `https://t.me/${ctx.botInfo.username}?start=t_${id}_${ctx.dbuser.id}`
+                    return ctx.reply(ctx.i18n.t('topic_link', { topic: shareSection.title, link: shareLink }), { disable_web_page_preview: true })
+                case 'pub_':
+                    const pubSection = await findSection(id)
+                    if (pubSection.authorId !== ctx.dbuser.id) {
+                        return ctx.reply(ctx.i18n.t('something_wrong'))
+                    }
+                    pubSection.isPublic = !pubSection.isPublic
+                    await pubSection.save()
+                    return ctx.reply(pubSection.isPublic ? ctx.i18n.t('topic_now_public') : ctx.i18n.t('topic_now_private'))
+                case 'join_':
+                    const joinSection = await findSection(id)
+                    if (!joinSection || !joinSection.isPublic) {
+                        return ctx.reply(ctx.i18n.t('something_wrong'))
+                    }
+                    await import('@/models/TopicMembership').then(async ({ upsertTopicMembership }) => {
+                        await upsertTopicMembership(new mongoose.Types.ObjectId(id), ctx.dbuser.id, 0)
+                    })
+                    ctx.dbuser.activeTopicSection = joinSection
+                    await ctx.dbuser.save()
+                    return ctx.reply(ctx.i18n.t('topic_invite_joined', { topic: joinSection.title }))
+
                 case questionPrefix:
                     if (id === 'new') {
                         ctx.dbuser.selectedQuestion = null
@@ -247,14 +275,25 @@ export async function waitMiddleware(ctx: Context, next: () => any) {
 }
 
 export async function updateSectionTitleCallback(ctx: Context, next: () => any) {
-    if (ctx.callbackQuery && (ctx.callbackQuery as any).data === 'create_section_title') {
+    if (!ctx.callbackQuery) return next()
+    const data = (ctx.callbackQuery as any).data as string
+
+    if (data === 'create_section_title') {
         ctx.dbuser.state = waitSectionState
         await ctx.dbuser.save()
         let keyboard = cancelKeyboard(ctx, CancelCallback.cancel_section)
         return await ctx.editMessageText(ctx.i18n.t('create_section_title'), keyboard)
-    } else {
-        return next()
     }
+
+    // Dynamic prefix handlers not caught by createCallback's switch
+    const prefixes = ['share_', 'pub_', 'join_']
+    for (const p of prefixes) {
+        if (data.startsWith(p)) {
+            return next() // handled inside createCallback
+        }
+    }
+
+    return next()
 }
 
 function cancelKeyboard(ctx: Context, data: CancelCallback = CancelCallback.cancel) {
@@ -274,12 +313,17 @@ export function sectionsKeyboard(sections: DocumentType<Section[]>, ctx: Context
     return m.inlineKeyboard(buttons, { columns: 1 })
 }
 
-export function questionsKeyboard(quizzes: DocumentType<Quiz[]>, ctx: Context): Markup.Markup<InlineKeyboardMarkup> {
+export function questionsKeyboard(quizzes: DocumentType<Quiz[]>, section: DocumentType<Section>, ctx: Context): Markup.Markup<InlineKeyboardMarkup> {
     let buttons = quizzes.map((q: DocumentType<Quiz>) => m.button.callback(q.question, questionPrefix + q._id))
+    const pubLabel = section.isPublic
+        ? '🔒 ' + ctx.i18n.t('make_private')
+        : '🌐 ' + ctx.i18n.t('make_public')
     let keyboard = m.inlineKeyboard([
         m.button.callback('◀️ ' + ctx.i18n.t('back'), 'back_sections'),
         m.button.callback('✍️ ' + ctx.i18n.t('update_section_title'), 'create_section_title'),
         m.button.callback('👊 ' + ctx.i18n.t('create_question'), questionPrefix + 'new'),
+        m.button.callback('🔗 ' + ctx.i18n.t('share_topic'), 'share_' + section._id),
+        m.button.callback(pubLabel, 'pub_' + section._id),
         ...buttons
     ], { columns: 2 })
     return keyboard

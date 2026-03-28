@@ -36,9 +36,9 @@ export async function cancelCallback(ctx: Context, next: () => any) {
         let k = sectionsKeyboard(sections, ctx)
         return await ctx.sendMessage(ctx.i18n.t('select'), k)
     case 'cancel_question':
-        let section = await findSection(ctx.dbuser.selectedSection)
-        let quizzes = await findQuizzesBySection(ctx.dbuser.selectedSection)
-        let kb = questionsKeyboard(quizzes, ctx)
+        let section = await findSection(ctx.dbuser.selectedSection as any)
+        let quizzes = await findQuizzesBySection(ctx.dbuser.selectedSection as any)
+        let kb = questionsKeyboard(quizzes, section, ctx)
         return await ctx.sendMessage(ctx.i18n.t('section', { section: section.title }), { parse_mode: "MarkdownV2", reply_markup: kb.reply_markup })
     default:
         return await sendMainKeyboard(ctx)
