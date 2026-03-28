@@ -8,7 +8,7 @@ dotenv.config({ path: `${__dirname}/../.env` })
 import { bot } from '@/helpers/bot'
 import { ignoreOldMessageUpdates } from '@/middlewares/ignoreOldMessageUpdates'
 import { setupStart } from '@/handlers/setupStart'
-import { i18n, attachI18N } from '@/helpers/i18n'
+import { i18nMiddleware, attachI18N } from '@/helpers/i18n'
 import { setLanguage, sendLanguage } from '@/handlers/language'
 import { attachUser } from '@/middlewares/attachUser'
 import { sendQuiz } from '@/handlers/sendQuiz'
@@ -31,7 +31,7 @@ import { sendCatalogue, handleExitTopic } from './handlers/sendCatalogue'
 // Middlewares
 bot.use(ignoreOldMessageUpdates)
 bot.use(attachUser)
-bot.use(i18n.middleware(), attachI18N)
+bot.use(i18nMiddleware, attachI18N)
 bot.use(cancelCallback)
 bot.use(checkAnswer)
 bot.use(nextQuestionCallback)
@@ -44,27 +44,33 @@ bot.use(updateSectionTitleCallback)
 bot.command('language', sendLanguage)
 bot.command(['stats', 'stat'], sendStats)
 bot.command('reset', sendReset)
-// Actions
-bot.action(localeActions, setLanguage)
-bot.action(difficultyEmojies, setDifficulty)
-bot.action(Emoji.Cheque, makeCheque)
-bot.action('exit_topic', handleExitTopic)
+// Start handler
+setupStart(bot)
+// Actions (callback queries)
+for (const locale of localeActions) {
+    bot.callbackQuery(locale, setLanguage)
+}
+for (const emoji of difficultyEmojies) {
+    bot.callbackQuery(emoji, setDifficulty)
+}
+bot.callbackQuery(Emoji.Cheque, makeCheque)
+bot.callbackQuery('exit_topic', handleExitTopic)
 // Errors
-bot.catch(console.error)
+bot.catch(err => console.error(err))
 // Hears
 bot.hears(new RegExp(Emoji.Quiz + ' .*'), async ctx => sendQuiz(ctx))
 bot.hears(new RegExp(Emoji.Select + ' .*'), async ctx => sendSelect(ctx))
 bot.hears(new RegExp(Emoji.Difficulty + ' .*'), async ctx => sendDifficulty(ctx))
 bot.hears(new RegExp(Emoji.Withdrawal + ' .*'), async ctx => sendResults(ctx))
 bot.hears(new RegExp(Emoji.Catalogue + ' .*'), async ctx => sendCatalogue(ctx))
-// Start bot
-setupStart(bot)
 
 bot.on('message', ctx => ctx.reply(ctx.i18n.t('not_understanded')))
 
-bot.launch().then(() => {
-  console.info(`Bot ${bot.botInfo.username} is up and running`)
-  startSelfAwarding()
-  startUnstaking()
-  startNotifications()
+bot.start({
+    onStart: (botInfo) => {
+        console.info(`Bot ${botInfo.username} is up and running`)
+        startSelfAwarding()
+        startUnstaking()
+        startNotifications()
+    }
 })

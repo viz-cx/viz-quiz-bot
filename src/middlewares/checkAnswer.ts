@@ -2,13 +2,14 @@ import { Difficulty, User } from '@/models'
 import { addToBalance, findUser } from '@/models/User'
 import { findQuizById } from '@/models/Quiz'
 import { getInviterForTopic } from '@/models/TopicMembership'
-import { Context } from 'telegraf'
+import { MyContext } from '@/types/context'
+import { NextFunction } from 'grammy'
 
 export const nextQuestionKeyboard = {
     inline_keyboard: [[{ text: "Следующий квиз", callback_data: "next_quiz" }]]
 }
 
-export async function checkAnswer(ctx: Context, next: () => any) {
+export async function checkAnswer(ctx: MyContext, next: NextFunction) {
     if (ctx.poll) {
         let user = ctx.dbuser
         let answeredQuizzes = user.answered
@@ -96,14 +97,14 @@ export async function checkAnswer(ctx: Context, next: () => any) {
             user.balance = user.balance + solverReward
             user.multiplier = user.multiplier + 1
             console.log(`Add ${solverReward} to solver ${user.id} (total reward ${totalReward}, now ${user.balance})`)
-            ctx.telegram.sendMessage(user.id, ctx.i18n.t('success_pay_for_answer', { score: Math.round(solverReward), balance: Math.round(user.balance) }))
+            ctx.api.sendMessage(user.id, ctx.i18n.t('success_pay_for_answer', { score: Math.round(solverReward), balance: Math.round(user.balance) }))
 
             // Pay author (background, if different from solver)
             if (authorId !== null && authorId !== user.id) {
                 addToBalance(authorId, authorReward).then(() => {
                     findUser(authorId).then(author => {
                         if (author) {
-                            ctx.telegram.sendMessage(author.id, ctx.i18n.t('success_pay_for_quiz_answer', {
+                            ctx.api.sendMessage(author.id, ctx.i18n.t('success_pay_for_quiz_answer', {
                                 score: Math.round(authorReward),
                                 balance: Math.round(author.balance)
                             }))
@@ -121,7 +122,7 @@ export async function checkAnswer(ctx: Context, next: () => any) {
                 addToBalance(inviterId, inviterReward).then(() => {
                     findUser(inviterId).then(inviter => {
                         if (inviter) {
-                            ctx.telegram.sendMessage(inviter.id, ctx.i18n.t('success_pay_as_inviter', {
+                            ctx.api.sendMessage(inviter.id, ctx.i18n.t('success_pay_as_inviter', {
                                 score: Math.round(inviterReward),
                                 balance: Math.round(inviter.balance)
                             }))

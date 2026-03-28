@@ -1,7 +1,8 @@
-import { Context } from 'telegraf'
+import { MyContext } from '@/types/context'
+import { NextFunction } from 'grammy'
 
-export async function ignoreOldMessageUpdates(ctx: Context, next: () => any) {
-  if (ctx.updateType === 'message') {
+export async function ignoreOldMessageUpdates(ctx: MyContext, next: NextFunction) {
+  if (ctx.message) {
     if (new Date().getTime() / 1000 - ctx.message.date < 5 * 60) {
       return next()
     } else {

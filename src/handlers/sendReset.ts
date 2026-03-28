@@ -1,18 +1,20 @@
-import { Markup as m } from 'telegraf';
-import { Context } from "telegraf/typings/context";
+import { MyContext } from "@/types/context";
+import { InlineKeyboard } from "grammy";
+import { NextFunction } from "grammy";
 
-export async function sendReset(ctx: Context) {
+export async function sendReset(ctx: MyContext) {
     let weekAgo = new Date(Date.now() - 604800000)
     let user = ctx.dbuser
     if (user.resetedAt > weekAgo) {
-        await ctx.replyWithHTML('⛔️ ' + ctx.i18n.t('reset_unavailable'))
+        await ctx.reply('⛔️ ' + ctx.i18n.t('reset_unavailable'), { parse_mode: 'HTML' })
         return
     }
-    await ctx.replyWithHTML('🤔 ' + ctx.i18n.t('reset'), m.inlineKeyboard([m.button.callback('💀 ' + ctx.i18n.t('reset_button'), 'reset')]))
+    const kb = new InlineKeyboard().text('💀 ' + ctx.i18n.t('reset_button'), 'reset')
+    await ctx.reply('🤔 ' + ctx.i18n.t('reset'), { parse_mode: 'HTML', reply_markup: kb })
 }
 
-export async function resetCallback(ctx: Context, next: () => any) {
-    if (ctx.callbackQuery && (ctx.callbackQuery as any).data === 'reset') {
+export async function resetCallback(ctx: MyContext, next: NextFunction) {
+    if (ctx.callbackQuery && 'data' in ctx.callbackQuery && ctx.callbackQuery.data === 'reset') {
         let weekAgo = new Date(Date.now() - 604800000)
         let user = ctx.dbuser
         if (user.resetedAt > weekAgo) {

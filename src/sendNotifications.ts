@@ -1,7 +1,6 @@
-import { Message } from 'telegraf/typings/core/types/typegram'
 import { mainKeyboard } from './helpers/keyboard'
 import { bot } from './helpers/bot'
-import { i18n } from './helpers/i18n'
+import { t } from './helpers/i18n'
 import { getQuizCountAfterDate, getUsersNotifiedBefore, updateNotifiedDate } from './models'
 
 export async function startNotifications() {
@@ -23,13 +22,13 @@ async function makeNotifications() {
             var successCounter = 0
             let allQuizzesCount = await getQuizCountAfterDate(new Date(0))
             while (users.length > 0) {
-                const messages: Promise<Message>[] = users.splice(0, 29)
+                const messages = users.splice(0, 29)
                     .map(async user => {
                         let unansweredCount = await getQuizCountAfterDate(user.updatedAt)
                         if (unansweredCount >= notifyWhenMoreThan && unansweredCount < allQuizzesCount - 1) {
                             updateNotifiedDate(user.id)
-                            return await bot.telegram.sendMessage(
-                                user.id, i18n.t(user.language, 'notification', { count: unansweredCount }), mainKeyboard(user.language))
+                            return await bot.api.sendMessage(
+                                user.id, t(user.language, 'notification', { count: unansweredCount }), mainKeyboard(user.language))
                         } else {
                             return await Promise.reject('No need to notify')
                         }

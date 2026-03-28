@@ -1,7 +1,7 @@
 import { getAllBalances } from "@/models/User"
-import { Context } from "telegraf"
+import { MyContext } from "@/types/context"
 
-export async function makeCheque(ctx: Context) {
+export async function makeCheque(ctx: MyContext) {
     let viz = ctx.viz
     const account = process.env.ACCOUNT
     let user = await viz.getAccount(account)
@@ -17,7 +17,7 @@ export async function makeCheque(ctx: Context) {
     let userVIZes = ctx.dbuser.balance * price
     let withdrowalable = userVIZes > 10
     if (!withdrowalable) {
-        ctx.answerCbQuery(ctx.i18n.t('not_enough'))
+        await ctx.answerCallbackQuery({ text: ctx.i18n.t('not_enough') })
         return
     }
     let u = ctx.dbuser
@@ -26,7 +26,7 @@ export async function makeCheque(ctx: Context) {
     u.resetedAt = new Date()
     u.save().then(async _ => {
         try {
-            ctx.deleteMessage(ctx.callbackQuery.message.message_id)
+            await ctx.deleteMessage()
         } catch (_) {}
         const account = process.env.ACCOUNT
         const wif = process.env.WIF
@@ -35,10 +35,10 @@ export async function makeCheque(ctx: Context) {
         const publicKey = viz.wifToPublic(privateKey)
         await viz.createInvite(wif, account, amount, publicKey)
             .then(_ => {
-                ctx.replyWithHTML(ctx.i18n.t('cheque', {
+                ctx.reply(ctx.i18n.t('cheque', {
                     viz: userVIZes.toFixed(2),
                     code: privateKey
-                }), { disable_web_page_preview: true })
+                }), { parse_mode: 'HTML', link_preview_options: { is_disabled: true } })
                 console.log('Successfully created cheque', privateKey, 'with balance', amount, 'for user', u.id)
             })
             .catch(_ => {

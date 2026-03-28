@@ -1,15 +1,16 @@
 import { addToBalance, findUser } from "@/models/User"
 import { findSection } from "@/models/Section"
 import { upsertTopicMembership } from "@/models/TopicMembership"
-import { Context, Telegraf } from "telegraf"
+import { MyContext } from "@/types/context"
+import { Bot } from "grammy"
 import { sendMainKeyboard } from "@/helpers/keyboard"
 import { mongoose } from "@typegoose/typegoose"
 
 const TOPIC_INVITE_PREFIX = 't_'
 
-export function setupStart(bot: Telegraf<Context>) {
-    bot.start(async (ctx) => {
-        const payload: string = (ctx as any)['startPayload']
+export function setupStart(bot: Bot<MyContext>) {
+    bot.command('start', async (ctx) => {
+        const payload = ctx.match
         var user = ctx.dbuser
         if (!user) {
             console.log('User not found!')
@@ -30,7 +31,7 @@ export function setupStart(bot: Telegraf<Context>) {
                             await upsertTopicMembership(sid, user.id, inviterId)
                             user.activeTopicSection = section
                             await user.save()
-                            await ctx.replyWithHTML(ctx.i18n.t('topic_invite_joined', { topic: section.title }))
+                            await ctx.reply(ctx.i18n.t('topic_invite_joined', { topic: section.title }), { parse_mode: 'HTML' })
                         }
                     } catch (e) {
                         console.error('Topic invite error:', e)
@@ -67,25 +68,25 @@ export function setupStart(bot: Telegraf<Context>) {
     })
 }
 
-function payToReferrer(referrerId: number, ctx: Context) {
+function payToReferrer(referrerId: number, ctx: MyContext) {
     let add = 1000
     addToBalance(referrerId, add)
         .then(_ => {
             findUser(referrerId).then(u => {
                 let payload = { score: add, balance: u.balance }
-                ctx.telegram.sendMessage(u.id, ctx.i18n.t('success_pay_referrer', payload))
+                ctx.api.sendMessage(u.id, ctx.i18n.t('success_pay_referrer', payload))
             })
         })
 }
 
-function payToReferral(referralId: number, ctx: Context) {
+function payToReferral(referralId: number, ctx: MyContext) {
     let add = 1000
     addToBalance(referralId, add)
         .then(_ => {
             findUser(referralId)
                 .then(u => {
                     let payload = { score: add, balance: u.balance }
-                    ctx.telegram.sendMessage(u.id, ctx.i18n.t('success_pay_referral', payload))
+                    ctx.api.sendMessage(u.id, ctx.i18n.t('success_pay_referral', payload))
                 })
         })
 }

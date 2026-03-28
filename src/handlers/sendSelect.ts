@@ -2,9 +2,10 @@ import { CancelCallback } from "@/middlewares/cancelCallback";
 import { findQuizById, findQuizzesBySection, Quiz, QuizModel } from "@/models/Quiz";
 import { findSection, getSectionsByUser, Section, SectionModel } from "@/models/Section";
 import { DocumentType } from "@typegoose/typegoose/lib/types";
-import { Context, Markup } from "telegraf";
-import { Markup as m } from 'telegraf';
-import { InlineKeyboardMarkup, Message } from "telegraf/typings/core/types/typegram";
+import { MyContext } from "@/types/context";
+import { InlineKeyboard } from "grammy";
+import { InlineKeyboardMarkup } from "@grammyjs/types";
+import { NextFunction } from "grammy";
 import { mongoose } from "@typegoose/typegoose";
 
 const delimiter = '_'
@@ -17,37 +18,39 @@ const sectionPrefix = 'section' + delimiter
 const questionPrefix = 'question' + delimiter
 const answerPrefix = 'answer' + delimiter
 
-export async function sendSelect(ctx: Context) {
+export async function sendSelect(ctx: MyContext) {
     const sections = await getSectionsByUser(ctx.dbuser.id)
     let keyboard = sectionsKeyboard(sections, ctx)
-    await ctx.replyWithHTML('👉️ ' + ctx.i18n.t('select'), keyboard)
+    await ctx.reply('👉️ ' + ctx.i18n.t('select'), { parse_mode: 'HTML', ...keyboard })
 }
 
-export async function createCallback(ctx: Context, next: () => any) {
+export async function createCallback(ctx: MyContext, next: NextFunction) {
     if (!ctx.callbackQuery) {
         return next()
     }
-    let data = (ctx.callbackQuery as any).data
+    let data = 'data' in ctx.callbackQuery ? ctx.callbackQuery.data : undefined
+    if (!data) return next()
+
     switch (data) {
         case 'back_sections':
             ctx.dbuser.state = ''
             await ctx.dbuser.save()
             const sections = await getSectionsByUser(ctx.dbuser.id)
             let k = sectionsKeyboard(sections, ctx)
-            return await ctx.sendMessage(ctx.i18n.t('select'), k)
+            return await ctx.reply(ctx.i18n.t('select'), k)
         case 'back_questions':
             ctx.dbuser.state = ''
             await ctx.dbuser.save()
             const backSection = await findSection(ctx.dbuser.selectedSection as any)
             let quizzes = await findQuizzesBySection(ctx.dbuser.selectedSection as any)
             let kb = questionsKeyboard(quizzes, backSection, ctx)
-            return await ctx.sendMessage(ctx.i18n.t('section', { section: backSection.title }), { parse_mode: "MarkdownV2", reply_markup: kb.reply_markup })
+            return await ctx.reply(ctx.i18n.t('section', { section: backSection.title }), { parse_mode: "MarkdownV2", reply_markup: kb.reply_markup })
         case 'create_button':
             ctx.dbuser.selectedSection = undefined
             ctx.dbuser.state = waitSectionState
             await ctx.dbuser.save()
             let keyboard = cancelKeyboard(ctx, CancelCallback.cancel_section)
-            return await ctx.editMessageText(ctx.i18n.t('create_section_title'), keyboard)
+            return await ctx.editMessageText(ctx.i18n.t('create_section_title'), { reply_markup: keyboard.reply_markup })
         default:
             const splitted = data.split(delimiter)
             if (splitted.length < 2) {
@@ -69,22 +72,22 @@ export async function createCallback(ctx: Context, next: () => any) {
                     if (isAlreadySelected) {
                         let quizzes = await findQuizzesBySection(selectedSection._id)
                         let keyboard = questionsKeyboard(quizzes, selectedSection, ctx)
-                        return await ctx.sendMessage(ctx.i18n.t('section', { section: selectedSection.title }), { parse_mode: "MarkdownV2", reply_markup: keyboard.reply_markup })
+                        return await ctx.reply(ctx.i18n.t('section', { section: selectedSection.title }), { parse_mode: "MarkdownV2", reply_markup: keyboard.reply_markup })
                     }
                     ctx.dbuser.selectedSection = selectedSection
                     ctx.dbuser.state = ''
                     await ctx.dbuser.save()
-                    const sections = await getSectionsByUser(ctx.dbuser.id)
-                    let keyboard = sectionsKeyboard(sections, ctx)
-                    await ctx.editMessageReplyMarkup(keyboard.reply_markup)
+                    const sections2 = await getSectionsByUser(ctx.dbuser.id)
+                    let keyboard2 = sectionsKeyboard(sections2, ctx)
+                    await ctx.editMessageReplyMarkup({ reply_markup: keyboard2.reply_markup })
                     break
                 case 'share_':
                     const shareSection = await findSection(id)
                     if (shareSection.authorId !== ctx.dbuser.id) {
                         return ctx.reply(ctx.i18n.t('something_wrong'))
                     }
-                    const shareLink = `https://t.me/${ctx.botInfo.username}?start=t_${id}_${ctx.dbuser.id}`
-                    return ctx.reply(ctx.i18n.t('topic_link', { topic: shareSection.title, link: shareLink }), { disable_web_page_preview: true })
+                    const shareLink = `https://t.me/${ctx.me.username}?start=t_${id}_${ctx.dbuser.id}`
+                    return ctx.reply(ctx.i18n.t('topic_link', { topic: shareSection.title, link: shareLink }), { link_preview_options: { is_disabled: true } })
                 case 'pub_':
                     const pubSection = await findSection(id)
                     if (pubSection.authorId !== ctx.dbuser.id) {
@@ -110,7 +113,7 @@ export async function createCallback(ctx: Context, next: () => any) {
                         ctx.dbuser.selectedQuestion = null
                         ctx.dbuser.state = waitQuestionState
                         await ctx.dbuser.save()
-                        await ctx.sendMessage(ctx.i18n.t('create_question_wait'), { parse_mode: "MarkdownV2" })
+                        await ctx.reply(ctx.i18n.t('create_question_wait'), { parse_mode: "MarkdownV2" })
                         return
                     }
                     let quiz = await findQuizById(id)
@@ -121,12 +124,12 @@ export async function createCallback(ctx: Context, next: () => any) {
                         ctx.dbuser.selectedQuestion = quiz
                         ctx.dbuser.state = waitQuestionState
                         await ctx.dbuser.save()
-                        await ctx.sendMessage(ctx.i18n.t('update_question_wait', { oldQuestion: quiz.question }),
+                        await ctx.reply(ctx.i18n.t('update_question_wait', { oldQuestion: quiz.question }),
                             { parse_mode: "MarkdownV2" })
                         return next()
                     }
-                    let kb = answersKeyboard(quiz, ctx)
-                    await ctx.sendMessage(ctx.i18n.t('question', { question: quiz.question }), { parse_mode: "MarkdownV2", reply_markup: kb.reply_markup })
+                    let kb2 = answersKeyboard(quiz, ctx)
+                    await ctx.reply(ctx.i18n.t('question', { question: quiz.question }), { parse_mode: "MarkdownV2", reply_markup: kb2.reply_markup })
                     break
                 case answerPrefix:
                     const answerId = Number(splitted[2])
@@ -143,9 +146,9 @@ export async function createCallback(ctx: Context, next: () => any) {
                     ctx.dbuser.selectedAnswer = answerId
                     await ctx.dbuser.save()
                     if (answer === undefined) {
-                        await ctx.sendMessage(ctx.i18n.t('create_answer_wait'), cancelKeyboard(ctx, CancelCallback.cancel_question))
+                        await ctx.reply(ctx.i18n.t('create_answer_wait'), cancelKeyboard(ctx, CancelCallback.cancel_question))
                     } else {
-                        await ctx.sendMessage(ctx.i18n.t('update_answer_wait', { oldAnswer: answer }),
+                        await ctx.reply(ctx.i18n.t('update_answer_wait', { oldAnswer: answer }),
                             { parse_mode: "MarkdownV2", reply_markup: cancelKeyboard(ctx, CancelCallback.cancel_question).reply_markup })
                     }
                     break
@@ -155,11 +158,11 @@ export async function createCallback(ctx: Context, next: () => any) {
     }
 }
 
-export async function waitMiddleware(ctx: Context, next: () => any) {
+export async function waitMiddleware(ctx: MyContext, next: NextFunction) {
     if (!ctx.message || !ctx.dbuser.state) {
         return next()
     }
-    let text = (ctx.message as Message.TextMessage).text
+    let text = (ctx.message as any).text
     if (text === undefined || text.length === 0) {
         return ctx.reply(ctx.i18n.t('something_wrong'))
     }
@@ -216,7 +219,7 @@ export async function waitMiddleware(ctx: Context, next: () => any) {
                 await ctx.dbuser.save()
 
                 let kb = answersKeyboard(newQuiz, ctx)
-                await ctx.sendMessage(ctx.i18n.t('create_question_result'), kb)
+                await ctx.reply(ctx.i18n.t('create_question_result'), kb)
                 return
             }
             let quiz = await findQuizById(ctx.dbuser.selectedQuestion)
@@ -231,7 +234,7 @@ export async function waitMiddleware(ctx: Context, next: () => any) {
             await ctx.dbuser.save()
 
             let kb = answersKeyboard(newQuiz, ctx)
-            await ctx.sendMessage(ctx.i18n.t('update_question_result', { oldQuestion: old, newQuestion: newQuiz.question }),
+            await ctx.reply(ctx.i18n.t('update_question_result', { oldQuestion: old, newQuestion: newQuiz.question }),
                 { parse_mode: "MarkdownV2", reply_markup: kb.reply_markup })
             break
         case waitAnswerState:
@@ -262,10 +265,10 @@ export async function waitMiddleware(ctx: Context, next: () => any) {
 
             let keyboard = answersKeyboard(qq, ctx)
             if (oldAnswer === undefined) {
-                await ctx.sendMessage(ctx.i18n.t('create_answer_result', { newAnswer: newAnswer }),
+                await ctx.reply(ctx.i18n.t('create_answer_result', { newAnswer: newAnswer }),
                     { parse_mode: "MarkdownV2", reply_markup: keyboard.reply_markup })
             } else {
-                await ctx.sendMessage(ctx.i18n.t('update_answer_result', { oldAnswer: oldAnswer, newAnswer: newAnswer }),
+                await ctx.reply(ctx.i18n.t('update_answer_result', { oldAnswer: oldAnswer, newAnswer: newAnswer }),
                     { parse_mode: "MarkdownV2", reply_markup: keyboard.reply_markup })
             }
             break
@@ -274,15 +277,16 @@ export async function waitMiddleware(ctx: Context, next: () => any) {
     }
 }
 
-export async function updateSectionTitleCallback(ctx: Context, next: () => any) {
+export async function updateSectionTitleCallback(ctx: MyContext, next: NextFunction) {
     if (!ctx.callbackQuery) return next()
-    const data = (ctx.callbackQuery as any).data as string
+    const data = 'data' in ctx.callbackQuery ? ctx.callbackQuery.data : undefined
+    if (!data) return next()
 
     if (data === 'create_section_title') {
         ctx.dbuser.state = waitSectionState
         await ctx.dbuser.save()
         let keyboard = cancelKeyboard(ctx, CancelCallback.cancel_section)
-        return await ctx.editMessageText(ctx.i18n.t('create_section_title'), keyboard)
+        return await ctx.editMessageText(ctx.i18n.t('create_section_title'), { reply_markup: keyboard.reply_markup })
     }
 
     // Dynamic prefix handlers not caught by createCallback's switch
@@ -296,48 +300,48 @@ export async function updateSectionTitleCallback(ctx: Context, next: () => any) 
     return next()
 }
 
-function cancelKeyboard(ctx: Context, data: CancelCallback = CancelCallback.cancel) {
-    return m.inlineKeyboard([m.button.callback(ctx.i18n.t('cancel_button'), data)])
+function cancelKeyboard(ctx: MyContext, data: CancelCallback = CancelCallback.cancel) {
+    return { reply_markup: new InlineKeyboard().text(ctx.i18n.t('cancel_button'), data) }
 }
 
-export function sectionsKeyboard(sections: DocumentType<Section[]>, ctx: Context): Markup.Markup<InlineKeyboardMarkup> {
-    let sectionButtons = sections.map((s: DocumentType<Section>) => {
+export function sectionsKeyboard(sections: DocumentType<Section[]>, ctx: MyContext) {
+    const kb = new InlineKeyboard()
+    kb.text('🔧 ' + ctx.i18n.t('create_button'), 'create_button').row()
+    ;(sections as any as DocumentType<Section>[]).forEach((s: DocumentType<Section>) => {
         var title = s.title
         if (ctx.dbuser.selectedSection && ctx.dbuser.selectedSection.equals(s.id.toString())) {
             title = '✅' + title
         }
-        return m.button.callback(title, sectionPrefix + s.id)
+        kb.text(title, sectionPrefix + s.id).row()
     })
-    let buttons = [m.button.callback('🔧 ' + ctx.i18n.t('create_button'), 'create_button')]
-        .concat(sectionButtons)
-    return m.inlineKeyboard(buttons, { columns: 1 })
+    return { reply_markup: kb }
 }
 
-export function questionsKeyboard(quizzes: DocumentType<Quiz[]>, section: DocumentType<Section>, ctx: Context): Markup.Markup<InlineKeyboardMarkup> {
-    let buttons = quizzes.map((q: DocumentType<Quiz>) => m.button.callback(q.question, questionPrefix + q._id))
+export function questionsKeyboard(quizzes: DocumentType<Quiz[]>, section: DocumentType<Section>, ctx: MyContext) {
     const pubLabel = section.isPublic
         ? '🔒 ' + ctx.i18n.t('make_private')
         : '🌐 ' + ctx.i18n.t('make_public')
-    let keyboard = m.inlineKeyboard([
-        m.button.callback('◀️ ' + ctx.i18n.t('back'), 'back_sections'),
-        m.button.callback('✍️ ' + ctx.i18n.t('update_section_title'), 'create_section_title'),
-        m.button.callback('👊 ' + ctx.i18n.t('create_question'), questionPrefix + 'new'),
-        m.button.callback('🔗 ' + ctx.i18n.t('share_topic'), 'share_' + section._id),
-        m.button.callback(pubLabel, 'pub_' + section._id),
-        ...buttons
-    ], { columns: 2 })
-    return keyboard
+    const kb = new InlineKeyboard()
+        .text('◀️ ' + ctx.i18n.t('back'), 'back_sections')
+        .text('✍️ ' + ctx.i18n.t('update_section_title'), 'create_section_title').row()
+        .text('👊 ' + ctx.i18n.t('create_question'), questionPrefix + 'new')
+        .text('🔗 ' + ctx.i18n.t('share_topic'), 'share_' + section._id).row()
+        .text(pubLabel, 'pub_' + section._id).row()
+    ;(quizzes as any as DocumentType<Quiz>[]).forEach((q: DocumentType<Quiz>) => {
+        kb.text(q.question, questionPrefix + q._id).row()
+    })
+    return { reply_markup: kb }
 }
 
-function answersKeyboard(quiz: Quiz, ctx: Context): Markup.Markup<InlineKeyboardMarkup> {
-    let buttons = quiz.answers.map((a: string, idx: number) => m.button.callback((idx === 0 ? '(✅) ' : '') + a, answerPrefix + quiz._id + delimiter + idx))
-    if (buttons.length < 10) {
-        buttons.push(m.button.callback(ctx.i18n.t('create_answer'), answerPrefix + quiz._id + delimiter + buttons.length))
+function answersKeyboard(quiz: Quiz, ctx: MyContext) {
+    const kb = new InlineKeyboard()
+        .text('◀️ ' + ctx.i18n.t('back'), 'back_questions')
+        .text('✍️ ' + ctx.i18n.t('update_question_title'), questionPrefix + quiz._id + delimiter + 'update').row()
+    quiz.answers.forEach((a: string, idx: number) => {
+        kb.text((idx === 0 ? '(✅) ' : '') + a, answerPrefix + quiz._id + delimiter + idx).row()
+    })
+    if (quiz.answers.length < 10) {
+        kb.text(ctx.i18n.t('create_answer'), answerPrefix + quiz._id + delimiter + quiz.answers.length).row()
     }
-    let keyboard = m.inlineKeyboard([
-        m.button.callback('◀️ ' + ctx.i18n.t('back'), 'back_questions'),
-        m.button.callback('✍️ ' + ctx.i18n.t('update_question_title'), questionPrefix + quiz._id + delimiter + 'update'),
-        ...buttons
-    ], { columns: 2 })
-    return keyboard
+    return { reply_markup: kb }
 }

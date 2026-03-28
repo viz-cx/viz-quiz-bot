@@ -1,9 +1,9 @@
 import { Emoji } from "@/helpers/keyboard"
 import { getAllBalances } from "@/models"
-import { Context, Markup } from "telegraf"
-import { ExtraReplyMessage } from "telegraf/typings/telegram-types"
+import { MyContext } from "@/types/context"
+import { InlineKeyboard } from "grammy"
 
-export async function sendResults(ctx: Context) {
+export async function sendResults(ctx: MyContext) {
     const account = process.env.ACCOUNT
     let user = await ctx.viz.getAccount(account)
         .catch(_ => ctx.viz.changeNode())
@@ -22,14 +22,13 @@ export async function sendResults(ctx: Context) {
         viz: userVIZes.toFixed(2),
         withdrowalable: withdrowalable
     }
-    let hideButton = !withdrowalable
-    let markup = Markup.inlineKeyboard([
-        Markup.button.callback(Emoji.Cheque + ' ' + ctx.i18n.t('withdrowal'), Emoji.Cheque, hideButton)
-    ]).reply_markup
-    let extra: ExtraReplyMessage = {
-        parse_mode: 'HTML',
-        disable_web_page_preview: true,
-        reply_markup: markup
+    const kb = new InlineKeyboard()
+    if (withdrowalable) {
+        kb.text(Emoji.Cheque + ' ' + ctx.i18n.t('withdrowal'), Emoji.Cheque)
     }
-    ctx.reply(ctx.i18n.t('results', payload), extra)
+    ctx.reply(ctx.i18n.t('results', payload), {
+        parse_mode: 'HTML',
+        link_preview_options: { is_disabled: true },
+        reply_markup: kb
+    })
 }

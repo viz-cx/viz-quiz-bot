@@ -1,11 +1,8 @@
 /**
  * Tests for the topic-invite deep-link parsing in setupStart.
  *
- * setupStart() registers a Telegraf bot.start() handler. We extract and test
- * the inner logic directly by building a mock context with a startPayload.
- *
- * Because setupStart requires a Telegraf bot instance, we mock the relevant
- * pieces and invoke the handler function returned by bot.start() capture.
+ * setupStart() registers a grammY bot.command('start', ...) handler.
+ * We capture the inner callback and invoke it with a mock context.
  */
 import { mongoose } from '@typegoose/typegoose'
 import * as db from '../setup/db'
@@ -22,16 +19,19 @@ afterEach(() => db.clear())
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
 /**
- * Capture the start handler that setupStart registers on the bot, then call it
- * with a mock context. This avoids having to spin up a real Telegraf bot.
+ * Capture the start handler that setupStart registers on the bot via
+ * bot.command('start', handler), then call it with a mock context.
  */
 async function invokeStartHandler(ctx: any) {
     let capturedHandler: Function | null = null
 
-    const fakeBotStart = (fn: Function) => { capturedHandler = fn }
-    const fakeBot = { start: fakeBotStart } as any
+    const fakeCommand = (name: string | string[], fn: Function) => {
+        if (name === 'start' || (Array.isArray(name) && name.includes('start'))) {
+            capturedHandler = fn
+        }
+    }
+    const fakeBot = { command: fakeCommand } as any
 
-    // Dynamically require to avoid module-alias runtime issues in Jest
     const { setupStart } = await import('@/handlers/setupStart')
     setupStart(fakeBot)
 
@@ -49,15 +49,12 @@ describe('setupStart — topic invite deep-link', () => {
         const section = await createSection('Crypto Basics', 999)
         const user = await getOrCreateUser(1001)
 
-        // makeCtx SPREADS dbuser — wire save() AFTER ctx is created so the
-        // mock captures ctx.dbuser (the actual mutated object), not the local var
         const ctx = makeCtx({ dbuser: { ...user!.toObject(), id: 1001 } as any })
-        ctx['startPayload'] = `t_${section._id}_999`
+        ctx.match = `t_${section._id}_999`
         ctx.dbuser.save = jest.fn().mockResolvedValue(ctx.dbuser)
 
         await invokeStartHandler(ctx)
 
-        // setupStart sets user.activeTopicSection = section on ctx.dbuser
         expect(ctx.dbuser.activeTopicSection).toBeDefined()
         expect(ctx.dbuser.save).toHaveBeenCalled()
     })
@@ -74,7 +71,7 @@ describe('setupStart — topic invite deep-link', () => {
 
         const payload = `t_${section._id}_999`
         const ctx = makeCtx({ dbuser: dbuser as any })
-        ctx['startPayload'] = payload
+        ctx.match = payload
 
         await invokeStartHandler(ctx)
 
@@ -97,12 +94,13 @@ describe('setupStart — topic invite deep-link', () => {
 
         const payload = `t_${section._id}_999`
         const ctx = makeCtx({ dbuser: dbuser as any })
-        ctx['startPayload'] = payload
+        ctx.match = payload
 
         await invokeStartHandler(ctx)
 
-        expect(ctx.replyWithHTML).toHaveBeenCalledWith(
-            expect.stringContaining('topic_invite_joined')
+        expect(ctx.reply).toHaveBeenCalledWith(
+            expect.stringContaining('topic_invite_joined'),
+            expect.objectContaining({ parse_mode: 'HTML' })
         )
     })
 
@@ -120,13 +118,13 @@ describe('setupStart — topic invite deep-link', () => {
         // First join
         const user1 = await findUser(4001)
         const ctx1 = makeCtx({ dbuser: makeDbuser(user1) as any })
-        ctx1['startPayload'] = `t_${section._id}_999`
+        ctx1.match = `t_${section._id}_999`
         await invokeStartHandler(ctx1)
 
         // Second join with a different inviter
         const user2 = await findUser(4001)
         const ctx2 = makeCtx({ dbuser: makeDbuser(user2) as any })
-        ctx2['startPayload'] = `t_${section._id}_888`
+        ctx2.match = `t_${section._id}_888`
         await invokeStartHandler(ctx2)
 
         const memberships = await TopicMembershipModel.find({ userId: 4001 })
@@ -145,7 +143,7 @@ describe('setupStart — invalid deep-links', () => {
             save: jest.fn().mockResolvedValue(undefined),
         })
         const ctx = makeCtx({ dbuser: dbuser as any })
-        ctx['startPayload'] = ''
+        ctx.match = ''
 
         await expect(invokeStartHandler(ctx)).resolves.not.toThrow()
     })
@@ -158,7 +156,7 @@ describe('setupStart — invalid deep-links', () => {
             save: jest.fn().mockResolvedValue(undefined),
         })
         const ctx = makeCtx({ dbuser: dbuser as any })
-        ctx['startPayload'] = `t_${section._id}` // missing _<inviterId>
+        ctx.match = `t_${section._id}` // missing _<inviterId>
 
         await expect(invokeStartHandler(ctx)).resolves.not.toThrow()
         const count = await TopicMembershipModel.countDocuments({ userId: 5002 })
@@ -173,7 +171,7 @@ describe('setupStart — invalid deep-links', () => {
         })
         const fakeId = new mongoose.Types.ObjectId().toString()
         const ctx = makeCtx({ dbuser: dbuser as any })
-        ctx['startPayload'] = `t_${fakeId}_999`
+        ctx.match = `t_${fakeId}_999`
 
         await expect(invokeStartHandler(ctx)).resolves.not.toThrow()
         const count = await TopicMembershipModel.countDocuments({ userId: 5003 })
@@ -187,17 +185,14 @@ describe('setupStart — referral link', () => {
         await getOrCreateUser(6001) // the referrer
         const user = await getOrCreateUser(6002)
 
-        // Wire save() AFTER ctx is created so the mock uses ctx.dbuser.
-        // save() must return { id } because setupStart chains .then(u => u.id)
         const ctx = makeCtx({ dbuser: { ...user!.toObject(), id: 6002, referrer: undefined } as any })
-        ctx['startPayload'] = '6001'
+        ctx.match = '6001'
         ctx.dbuser.save = jest.fn().mockResolvedValue({ id: 6002 })
 
         await invokeStartHandler(ctx)
         // Wait for the fire-and-forget findUser().then() chain to settle
         await new Promise<void>(r => setTimeout(r, 150))
 
-        // setupStart sets user.referrer = 6001 on ctx.dbuser
         expect(ctx.dbuser.referrer).toBe(6001)
     })
 
@@ -209,12 +204,11 @@ describe('setupStart — referral link', () => {
             save: jest.fn().mockResolvedValue(undefined),
         })
         const ctx = makeCtx({ dbuser: dbuser as any })
-        ctx['startPayload'] = '7001' // same as own id
+        ctx.match = '7001' // same as own id
 
         await invokeStartHandler(ctx)
         await new Promise<void>(r => setImmediate(r))
 
-        // referrer should NOT be set
         expect(dbuser.referrer).toBeUndefined()
     })
 })

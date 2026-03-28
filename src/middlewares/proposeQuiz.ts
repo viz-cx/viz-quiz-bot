@@ -1,15 +1,15 @@
 import { sectionsKeyboard } from '@/handlers/sendSelect'
 import { addToBalance, findQuizByPollId, findUser, QuizModel } from '@/models'
 import { getSectionsByUser } from '@/models/Section'
-import { Context } from 'telegraf'
-import { Poll } from 'telegraf/typings/core/types/typegram'
+import { MyContext } from '@/types/context'
+import { NextFunction } from 'grammy'
 
-export async function proposeQuiz(ctx: Context, next: () => any) {
+export async function proposeQuiz(ctx: MyContext, next: NextFunction) {
     if (ctx.message === undefined) {
         return next()
     }
 
-    let poll = (ctx.message as any).poll as Poll
+    let poll = (ctx.message as any).poll
     if (poll === undefined) {
         return next()
     }
@@ -30,10 +30,6 @@ export async function proposeQuiz(ctx: Context, next: () => any) {
         return await ctx.reply(ctx.i18n.t('section_not_selected'), keyboard)
     }
 
-    if (poll.type !== 'quiz') {
-        return await ctx.reply(ctx.i18n.t('not_quiz'))
-    }
-
     if (!poll.correct_option_id) {
         return await ctx.reply(ctx.i18n.t('something_wrong'))
     }
@@ -51,7 +47,7 @@ export async function proposeQuiz(ctx: Context, next: () => any) {
     let quiz = new QuizModel()
     quiz.question = poll.question
     quiz.answers = answers
-    quiz.explanation = poll.explanation // TODO: explanation_entities
+    quiz.explanation = poll.explanation
     quiz.authorId = ctx.message.from.id
     quiz.pollId = poll.id
     quiz.sectionId = ctx.dbuser.selectedSection
@@ -72,19 +68,19 @@ export async function proposeQuiz(ctx: Context, next: () => any) {
     await sendToSupport(ctx)
 }
 
-function payToAuthor(authorId: number, ctx: Context) {
+function payToAuthor(authorId: number, ctx: MyContext) {
     let add = 500
     addToBalance(authorId, add)
         .then(_ => {
             findUser(authorId)
                 .then(author => {
                     let payload = { score: add, balance: author.balance }
-                    ctx.telegram.sendMessage(author.id, ctx.i18n.t('success_pay_for_quiz', payload))
+                    ctx.api.sendMessage(author.id, ctx.i18n.t('success_pay_for_quiz', payload))
                 })
         })
 }
 
-async function sendToSupport(ctx: Context) {
+async function sendToSupport(ctx: MyContext) {
     const techChatId = parseInt(process.env.ADMIN_TELEGRAM_ID)
     await ctx.forwardMessage(techChatId)
 }

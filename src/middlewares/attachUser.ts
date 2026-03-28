@@ -1,8 +1,9 @@
 import { VIZ } from '@/helpers/viz'
 import { findUserByPollId, getOrCreateUser } from '@/models/index'
-import { Context } from 'telegraf'
+import { MyContext } from '@/types/context'
+import { NextFunction } from 'grammy'
 
-export async function attachUser(ctx: Context, next) {
+export async function attachUser(ctx: MyContext, next: NextFunction) {
   ctx.viz = VIZ.origin
   if (ctx.poll) {
     ctx.dbuser = await findUserByPollId(ctx.poll.id)

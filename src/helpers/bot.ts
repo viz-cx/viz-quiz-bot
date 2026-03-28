@@ -1,3 +1,4 @@
-import { Telegraf } from 'telegraf'
+import { Bot } from 'grammy'
+import { MyContext } from '@/types/context'
 
-export const bot = new Telegraf(process.env.TOKEN)
+export const bot = new Bot<MyContext>(process.env.TOKEN)

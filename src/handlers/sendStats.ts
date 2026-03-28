@@ -1,7 +1,7 @@
 import { getUsersCount, getQuizCountAfterDate, getAllBalances, getRichestUser } from "@/models";
-import { Context } from "telegraf/typings/context";
+import { MyContext } from "@/types/context";
 
-export function sendStats(ctx: Context) {
+export function sendStats(ctx: MyContext) {
     const zeroDate = new Date(0)
     const monthAgo = new Date(new Date().setDate(new Date().getDate() - 30))
     Promise.all([
@@ -23,10 +23,10 @@ export function sendStats(ctx: Context) {
             'quizzes': results[2],
             'monthQuizzes': results[3],
             'allBalances': allBalances,
-            'viz': allVIZes.toFixed(2), 
+            'viz': allVIZes.toFixed(2),
             'price': price.toFixed(6),
             'richest': richest
         }
-        ctx.replyWithHTML(ctx.i18n.t('stats', params))
+        ctx.reply(ctx.i18n.t('stats', params), { parse_mode: 'HTML' })
     })
 }

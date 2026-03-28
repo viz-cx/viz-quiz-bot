@@ -1,5 +1,5 @@
 import { findQuizById, findUnasweredQuizzes, findUnansweredQuizzesInSection, Quiz } from "@/models/Quiz"
-import { Context } from "telegraf"
+import { MyContext } from "@/types/context"
 import { nextQuestionKeyboard } from "@/middlewares/checkAnswer"
 import { Difficulty, findUser, User } from "@/models"
 import { DocumentType } from "@typegoose/typegoose/lib/types"
@@ -12,7 +12,7 @@ const exitTopicKeyboard = {
     ]
 }
 
-export async function sendQuiz(ctx: Context) {
+export async function sendQuiz(ctx: MyContext) {
     deletePreviousMessage(ctx)
     let answeredQuizzes = ctx.dbuser.answered
     if (answeredQuizzes === null) {
@@ -79,7 +79,8 @@ export async function sendQuiz(ctx: Context) {
             secondsToAnswer = 60
             break
     }
-    ctx.replyWithQuiz(question, shuffledAnswers, {
+    ctx.replyWithPoll(question, shuffledAnswers, {
+        type: 'quiz',
         is_anonymous: true,
         allows_multiple_answers: false,
         correct_option_id: correctValueID,
@@ -107,11 +108,11 @@ export async function sendQuiz(ctx: Context) {
     })
 }
 
-export async function deletePreviousMessage(ctx: Context) {
+export async function deletePreviousMessage(ctx: MyContext) {
     let user = ctx.dbuser
     if (user.quizMessageId) {
         try {
-            await ctx.deleteMessage(user.quizMessageId)
+            await ctx.api.deleteMessage(ctx.chat.id, user.quizMessageId)
         } catch (_) { }
     }
 }
@@ -128,8 +129,8 @@ function shuffle(array) {
     return array
 }
 
-async function closePoll(ctx: Context, message_id: number) {
+async function closePoll(ctx: MyContext, message_id: number) {
     try {
-        await ctx.stopPoll(message_id)
+        await ctx.api.stopPoll(ctx.chat.id, message_id)
     } catch (_) { }
 }

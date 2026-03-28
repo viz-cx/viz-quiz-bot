@@ -217,7 +217,7 @@ describe('checkAnswer — free-play (no inviter)', () => {
         const { ctx } = await buildScenario({ solverId: 2001, authorId: 2002 })
         await checkAnswer(ctx, jest.fn())
         await flush()
-        const recipients = ctx.telegram.sendMessage.mock.calls.map((c: any[]) => c[0])
+        const recipients = ctx.api.sendMessage.mock.calls.map((c: any[]) => c[0])
         expect(recipients).toContain(2001)
     })
 
@@ -225,7 +225,7 @@ describe('checkAnswer — free-play (no inviter)', () => {
         const { ctx } = await buildScenario({ solverId: 2001, authorId: 2002 })
         await checkAnswer(ctx, jest.fn())
         await flush()
-        const recipients = ctx.telegram.sendMessage.mock.calls.map((c: any[]) => c[0])
+        const recipients = ctx.api.sendMessage.mock.calls.map((c: any[]) => c[0])
         expect(recipients).toContain(2001) // solver
         expect(recipients).toContain(2002) // author
     })
@@ -301,7 +301,7 @@ describe('checkAnswer — topic-invite mode (25/50/25)', () => {
         await checkAnswer(ctx, jest.fn())
         await flush()
 
-        const recipients = ctx.telegram.sendMessage.mock.calls.map((c: any[]) => c[0])
+        const recipients = ctx.api.sendMessage.mock.calls.map((c: any[]) => c[0])
         expect(recipients).toContain(5001) // solver
         expect(recipients).toContain(5002) // author
         expect(recipients).toContain(5003) // inviter
