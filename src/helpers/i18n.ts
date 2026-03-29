@@ -15,7 +15,10 @@ for (const file of readdirSync(localesDir)) {
 }
 
 function interpolate(template: string, params: Record<string, unknown> = {}): string {
-    return template.replace(/\$\{(\w+)\}/g, (_, key) => {
+    // Handle ternary expressions: ${key ? 'truthy' : 'falsy'}
+    return template.replace(/\$\{(\w+)\s*\?\s*'([^']*)'\s*:\s*'([^']*)'\}/g, (_, key, ifTrue, ifFalse) => {
+        return params[key] ? ifTrue : ifFalse
+    }).replace(/\$\{(\w+)\}/g, (_, key) => {
         return params[key] !== undefined ? String(params[key]) : `\${${key}}`
     }).replace(/\{(\w+)\}/g, (_, key) => {
         return params[key] !== undefined ? String(params[key]) : `{${key}}`
