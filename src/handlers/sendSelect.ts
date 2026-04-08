@@ -7,6 +7,7 @@ import { InlineKeyboard } from "grammy";
 import { InlineKeyboardMarkup } from "@grammyjs/types";
 import { NextFunction } from "grammy";
 import { mongoose } from "@typegoose/typegoose";
+import { parseTextQuiz } from "@/helpers/parseTextQuiz";
 
 const delimiter = '_'
 
@@ -200,17 +201,18 @@ export async function waitMiddleware(ctx: MyContext, next: NextFunction) {
             break
         case waitQuestionState:
             if (!ctx.dbuser.selectedQuestion) { // new question
-                let answers = text.split('\n')
-                let question = answers.shift()
-                if (answers.length < 2) {
+                const parsed = parseTextQuiz(text)
+                if (!parsed || parsed.answers.length < 2) {
                     return ctx.reply(ctx.i18n.t('create_question_min'), cancelKeyboard(ctx, CancelCallback.cancel_question))
                 }
-                if (answers.length > 10) {
+                if (parsed.answers.length > 10) {
                     return ctx.reply(ctx.i18n.t('create_question_max'), cancelKeyboard(ctx, CancelCallback.cancel_question))
                 }
                 let quiz = new QuizModel()
-                quiz.question = question
-                quiz.answers = answers
+                quiz.question = parsed.question
+                quiz.answers = parsed.answers
+                quiz.correctAnswerIndices = parsed.correctAnswerIndices
+                quiz.description = parsed.description
                 quiz.authorId = ctx.dbuser.id
                 quiz.sectionId = ctx.dbuser.selectedSection
                 let newQuiz = await quiz.save()
@@ -337,8 +339,9 @@ function answersKeyboard(quiz: Quiz, ctx: MyContext) {
     const kb = new InlineKeyboard()
         .text('◀️ ' + ctx.i18n.t('back'), 'back_questions')
         .text('✍️ ' + ctx.i18n.t('update_question_title'), questionPrefix + quiz._id + delimiter + 'update').row()
+    const correctIndices = quiz.correctAnswerIndices ?? [0]
     quiz.answers.forEach((a: string, idx: number) => {
-        kb.text((idx === 0 ? '(✅) ' : '') + a, answerPrefix + quiz._id + delimiter + idx).row()
+        kb.text((correctIndices.includes(idx) ? '(✅) ' : '') + a, answerPrefix + quiz._id + delimiter + idx).row()
     })
     if (quiz.answers.length < 10) {
         kb.text(ctx.i18n.t('create_answer'), answerPrefix + quiz._id + delimiter + quiz.answers.length).row()

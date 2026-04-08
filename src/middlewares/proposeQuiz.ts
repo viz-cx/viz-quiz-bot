@@ -30,23 +30,25 @@ export async function proposeQuiz(ctx: MyContext, next: NextFunction) {
         return await ctx.reply(ctx.i18n.t('section_not_selected'), keyboard)
     }
 
-    if (!poll.correct_option_id) {
-        return await ctx.reply(ctx.i18n.t('something_wrong'))
+    let correctOptionIds: number[]
+    if (Array.isArray(poll.correct_option_ids) && poll.correct_option_ids.length > 0) {
+        correctOptionIds = poll.correct_option_ids
+    } else if (typeof poll.correct_option_id === 'number') {
+        correctOptionIds = [poll.correct_option_id]
+    } else {
+        // Correct answer data not available (e.g. forwarded from a non-private context)
+        // Default to first answer as correct
+        console.log('proposeQuiz: no correct answer data, defaulting to [0]. Poll:', JSON.stringify(poll))
+        correctOptionIds = [0]
     }
 
-    let answers: string[] = []
-    for (let i = 0; i < poll.options.length; i++) {
-        let answer = poll.options[i].text
-        if (i === poll.correct_option_id) {
-            answers = [answer, ...answers] // correct answer first
-        } else {
-            answers = [...answers, answer]
-        }
-    }
+    let answers: string[] = poll.options.map((o: any) => o.text)
 
     let quiz = new QuizModel()
     quiz.question = poll.question
     quiz.answers = answers
+    quiz.correctAnswerIndices = correctOptionIds
+    quiz.description = poll.description || undefined
     quiz.explanation = poll.explanation
     quiz.authorId = ctx.message.from.id
     quiz.pollId = poll.id

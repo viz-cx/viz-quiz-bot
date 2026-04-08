@@ -7,7 +7,13 @@ export class Quiz extends Base<mongoose.Schema.Type.String> {
     question: string
 
     @prop({ type: String, required: true, default: [] })
-    answers: mongoose.Types.Array<string> // first is correct
+    answers: mongoose.Types.Array<string>
+
+    @prop({ type: Number, required: true, default: [0] })
+    correctAnswerIndices: number[]
+
+    @prop({ required: false, maxlength: 300 })
+    description?: string
 
     @prop({ required: false })
     explanation?: string

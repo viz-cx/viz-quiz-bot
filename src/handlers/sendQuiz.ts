@@ -60,10 +60,9 @@ export async function sendQuiz(ctx: MyContext) {
     }
     let question = randomQuiz.question
     let answers = randomQuiz.answers
-    let correctValue = answers[0]
-    let shuffledAnswers = shuffle(answers)
-    let correctValueID = shuffledAnswers.indexOf(correctValue)
+    let correctOptionIds = randomQuiz.correctAnswerIndices ?? [0]
     let explanation = randomQuiz.explanation
+    let description = randomQuiz.description
     let secondsToAnswer: number
     switch ((ctx.dbuser as User).difficulty) {
         case Difficulty.Easy:
@@ -79,15 +78,21 @@ export async function sendQuiz(ctx: MyContext) {
             secondsToAnswer = 60
             break
     }
-    ctx.replyWithPoll(question, shuffledAnswers, {
+    const pollOptions: any = {
         type: 'quiz',
         is_anonymous: true,
-        allows_multiple_answers: false,
-        correct_option_id: correctValueID,
+        allows_multiple_answers: correctOptionIds.length > 1,
+        correct_option_ids: correctOptionIds,
         is_closed: false,
         explanation: explanation,
-        open_period: secondsToAnswer
-    }).then(msg => {
+        open_period: secondsToAnswer,
+        shuffle_options: true,
+        hide_results_until_closes: true,
+    }
+    if (description) {
+        pollOptions.description = description
+    }
+    ctx.replyWithPoll(question, answers, pollOptions).then(msg => {
         let user = ctx.dbuser
         user.pollId = msg.poll.id
         user.quizMessageId = msg.message_id
@@ -115,18 +120,6 @@ export async function deletePreviousMessage(ctx: MyContext) {
             await ctx.api.deleteMessage(ctx.chat.id, user.quizMessageId)
         } catch (_) { }
     }
-}
-
-function shuffle(array) {
-    var currentIndex = array.length, temporaryValue, randomIndex
-    while (0 !== currentIndex) {
-        randomIndex = Math.floor(Math.random() * currentIndex)
-        currentIndex -= 1
-        temporaryValue = array[currentIndex]
-        array[currentIndex] = array[randomIndex]
-        array[randomIndex] = temporaryValue
-    }
-    return array
 }
 
 async function closePoll(ctx: MyContext, message_id: number) {

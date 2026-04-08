@@ -39,9 +39,12 @@ export interface CtxOverrides {
         question: string
         options: Array<{ text: string; voter_count: number }>
         correct_option_id: number
+        correct_option_ids: number[]
+        allows_multiple_answers: boolean
         is_closed: boolean
     }>
     match?: string
+    message?: any
     callbackQuery?: { data: string; message?: { message_id: number } }
 }
 
@@ -89,6 +92,8 @@ export function makeCtx(overrides: CtxOverrides = {}) {
         // chat info
         chat: { id: 1001 },
         from: { id: 1001 },
+        // message (for proposeQuiz and other message-based handlers)
+        message: overrides.message ?? null,
     }
 
     return ctx

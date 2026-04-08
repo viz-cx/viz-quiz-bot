@@ -111,3 +111,58 @@ describe('findUnansweredQuizzesInSection', () => {
         expect((result as unknown as any[]).length).toBeLessThanOrEqual(10)
     })
 })
+
+// --- correctAnswerIndices field ---
+describe('Quiz — correctAnswerIndices', () => {
+    it('defaults to [0] when not specified', async () => {
+        const quiz = await QuizModel.create({
+            question: 'Default indices?',
+            answers: ['A', 'B'],
+            authorId: 1,
+        })
+        expect([...quiz.correctAnswerIndices]).toEqual([0])
+    })
+
+    it('stores multiple correct indices', async () => {
+        const quiz = await QuizModel.create({
+            question: 'Multi correct?',
+            answers: ['A', 'B', 'C', 'D'],
+            correctAnswerIndices: [0, 2, 3],
+            authorId: 1,
+        })
+        expect([...quiz.correctAnswerIndices]).toEqual([0, 2, 3])
+    })
+
+    it('persists after save and reload', async () => {
+        const quiz = await QuizModel.create({
+            question: 'Persist?',
+            answers: ['A', 'B', 'C'],
+            correctAnswerIndices: [1, 2],
+            authorId: 1,
+        })
+        const reloaded = await QuizModel.findById(quiz._id)
+        expect([...reloaded.correctAnswerIndices]).toEqual([1, 2])
+    })
+})
+
+// --- description field ---
+describe('Quiz — description', () => {
+    it('stores description when provided', async () => {
+        const quiz = await QuizModel.create({
+            question: 'With desc?',
+            answers: ['A', 'B'],
+            description: 'This is a quiz description',
+            authorId: 1,
+        })
+        expect(quiz.description).toBe('This is a quiz description')
+    })
+
+    it('allows undefined description', async () => {
+        const quiz = await QuizModel.create({
+            question: 'No desc?',
+            answers: ['A', 'B'],
+            authorId: 1,
+        })
+        expect(quiz.description).toBeUndefined()
+    })
+})
