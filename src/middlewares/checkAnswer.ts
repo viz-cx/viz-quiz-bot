@@ -50,7 +50,7 @@ export async function checkAnswer(ctx: MyContext, next: NextFunction) {
             user.quizMessageId = null
             user.pollId = null
             user.quizId = null
-            user.save()
+            await user.save()
             return next()
         }
 
@@ -131,19 +131,21 @@ export async function checkAnswer(ctx: MyContext, next: NextFunction) {
             }
             console.log(`Add ${solverReward} to solver ${user.id} (accuracy ${accuracy}, total reward ${totalReward}, now ${user.balance})`)
             ctx.api.sendMessage(user.id, ctx.i18n.t('success_pay_for_answer', { score: Math.round(solverReward), balance: Math.round(user.balance) }))
+                .catch(err => console.error(`Failed to notify solver ${user.id}`, err))
 
             // Pay author (background, if different from solver)
             if (authorId !== null && authorId !== user.id) {
-                addToBalance(authorId, authorReward).then(() => {
-                    findUser(authorId).then(author => {
+                addToBalance(authorId, authorReward)
+                    .then(() => findUser(authorId))
+                    .then(author => {
                         if (author) {
-                            ctx.api.sendMessage(author.id, ctx.i18n.t('success_pay_for_quiz_answer', {
+                            return ctx.api.sendMessage(author.id, ctx.i18n.t('success_pay_for_quiz_answer', {
                                 score: Math.round(authorReward),
                                 balance: Math.round(author.balance)
                             }))
                         }
                     })
-                })
+                    .catch(err => console.error(`Failed to pay/notify author ${authorId}`, err))
             } else if (authorId === user.id) {
                 // Solver is also the author — add both portions to the same user
                 user.balance = user.balance + authorReward
@@ -152,16 +154,17 @@ export async function checkAnswer(ctx: MyContext, next: NextFunction) {
 
             // Pay inviter (background, if present and different from solver)
             if (hasInviter) {
-                addToBalance(inviterId, inviterReward).then(() => {
-                    findUser(inviterId).then(inviter => {
+                addToBalance(inviterId, inviterReward)
+                    .then(() => findUser(inviterId))
+                    .then(inviter => {
                         if (inviter) {
-                            ctx.api.sendMessage(inviter.id, ctx.i18n.t('success_pay_as_inviter', {
+                            return ctx.api.sendMessage(inviter.id, ctx.i18n.t('success_pay_as_inviter', {
                                 score: Math.round(inviterReward),
                                 balance: Math.round(inviter.balance)
                             }))
                         }
                     })
-                })
+                    .catch(err => console.error(`Failed to pay/notify inviter ${inviterId}`, err))
             }
 
             user.answered.push(user.quizId)
@@ -170,7 +173,7 @@ export async function checkAnswer(ctx: MyContext, next: NextFunction) {
             user.multiplier = 0
         }
         user.quizId = null
-        user.save()
+        await user.save()
     } else {
         return next()
     }

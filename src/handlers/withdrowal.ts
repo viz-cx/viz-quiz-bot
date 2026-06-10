@@ -2,48 +2,53 @@ import { getAllBalances } from "@/models/User"
 import { MyContext } from "@/types/context"
 
 export async function makeCheque(ctx: MyContext) {
-    let viz = ctx.viz
+    const viz = ctx.viz
     const account = process.env.ACCOUNT
-    let user = await viz.getAccount(account)
-        .catch(_ => ctx.viz.changeNode())
-    let allVIZes = parseFloat(user['balance'])
-    let allBalances = await getAllBalances()
-    let price = allVIZes / allBalances
-    if (allBalances === 0) {
-        price = 0
-    } else {
-        price = allVIZes / allBalances
+    let chainAccount: Object
+    try {
+        chainAccount = await viz.getAccount(account)
+    } catch (_) {
+        viz.changeNode()
+        await ctx.answerCallbackQuery({ text: ctx.i18n.t('something_wrong') })
+        return
     }
-    let userVIZes = ctx.dbuser.balance * price
-    let withdrowalable = userVIZes > 10
-    if (!withdrowalable) {
+    const allVIZes = parseFloat(chainAccount['balance'])
+    const allBalances = await getAllBalances()
+    const price = allBalances === 0 ? 0 : allVIZes / allBalances
+    const userVIZes = ctx.dbuser.balance * price
+    if (userVIZes <= 10) {
         await ctx.answerCallbackQuery({ text: ctx.i18n.t('not_enough') })
         return
     }
-    let u = ctx.dbuser
+    const u = ctx.dbuser
+    const prevBalance = u.balance
+    const prevMultiplier = u.multiplier
+    const prevResetedAt = u.resetedAt
     u.balance = 0
     u.multiplier = 0
     u.resetedAt = new Date()
-    u.save().then(async _ => {
-        try {
-            await ctx.deleteMessage()
-        } catch (_) {}
-        const account = process.env.ACCOUNT
-        const wif = process.env.WIF
-        const amount = '' + userVIZes.toFixed(3) + ' VIZ'
-        const privateKey = viz.generateWif()
-        const publicKey = viz.wifToPublic(privateKey)
+    await u.save()
+    try {
+        await ctx.deleteMessage()
+    } catch (_) { }
+    const wif = process.env.WIF
+    const amount = userVIZes.toFixed(3) + ' VIZ'
+    const privateKey = viz.generateWif()
+    const publicKey = viz.wifToPublic(privateKey)
+    try {
         await viz.createInvite(wif, account, amount, publicKey)
-            .then(_ => {
-                ctx.reply(ctx.i18n.t('cheque', {
-                    viz: userVIZes.toFixed(2),
-                    code: privateKey
-                }), { parse_mode: 'HTML', link_preview_options: { is_disabled: true } })
-                console.log('Successfully created cheque', privateKey, 'with balance', amount, 'for user', u.id)
-            })
-            .catch(_ => {
-                ctx.reply(ctx.i18n.t('something_wrong'))
-                console.log('Failed to create invite for', u.id, 'with', amount, 'VIZ')
-            })
-    })
+        await ctx.reply(ctx.i18n.t('cheque', {
+            viz: userVIZes.toFixed(2),
+            code: privateKey
+        }), { parse_mode: 'HTML', link_preview_options: { is_disabled: true } })
+        console.log('Successfully created cheque with balance', amount, 'for user', u.id)
+    } catch (_) {
+        // Invite never reached the chain — give the points back
+        u.balance = prevBalance
+        u.multiplier = prevMultiplier
+        u.resetedAt = prevResetedAt
+        await u.save()
+        await ctx.reply(ctx.i18n.t('something_wrong'))
+        console.log('Failed to create invite for', u.id, 'with', amount, 'VIZ')
+    }
 }

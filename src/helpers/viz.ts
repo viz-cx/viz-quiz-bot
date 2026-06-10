@@ -1,3 +1,5 @@
+import { randomBytes } from 'crypto'
+
 export class VIZ {
     private static vizJS = require("viz-js-lib")
 
@@ -67,14 +69,9 @@ export class VIZ {
     }
 
     public generateWif(): string {
-        let length = 100
-        let charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+-=_:;.,@!^&*$'
-        let ret = ''
-        for (var i = 0, n = charset.length; i < length; ++i) {
-            ret += charset.charAt(Math.floor(Math.random() * n))
-        }
-        let wif = VIZ.vizJS.auth.toWif('', ret, '')
-        return wif
+        // Cheque private keys must come from a CSPRNG, never Math.random()
+        const seed = randomBytes(48).toString('base64')
+        return VIZ.vizJS.auth.toWif('', seed, '')
     }
 
     public wifToPublic(wif: string): string {

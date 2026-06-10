@@ -492,3 +492,39 @@ describe('checkAnswer — multi-correct quizzes', () => {
         expect(ctx.dbuser.multiplier).toBe(0)
     })
 })
+
+// --- async robustness ---
+describe('checkAnswer — async robustness', () => {
+    it('persists user state before checkAnswer resolves', async () => {
+        const { ctx } = await buildScenario({ solverId: 9101, authorId: 9102 })
+        let persisted = false
+        ctx.dbuser.save = jest.fn(async () => {
+            await new Promise<void>(resolve => setTimeout(resolve, 20))
+            persisted = true
+        })
+
+        await checkAnswer(ctx, jest.fn())
+
+        expect(persisted).toBe(true)
+        await flush()
+    })
+
+    it('does not leave unhandled rejections when Telegram sends fail', async () => {
+        const { ctx } = await buildScenario({
+            solverId: 9201,
+            authorId: 9202,
+            inviterId: 9203,
+        })
+        ctx.api.sendMessage = jest.fn().mockRejectedValue(new Error('403: bot was blocked by the user'))
+
+        const unhandled: unknown[] = []
+        const onUnhandled = (reason: unknown) => unhandled.push(reason)
+        process.on('unhandledRejection', onUnhandled)
+
+        await checkAnswer(ctx, jest.fn())
+        await flush()
+
+        process.off('unhandledRejection', onUnhandled)
+        expect(unhandled).toHaveLength(0)
+    })
+})

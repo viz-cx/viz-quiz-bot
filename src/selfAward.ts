@@ -8,22 +8,32 @@ export async function startSelfAwarding() {
     }, 1000 * 60 * 60 * hours)
 }
 
-async function makeSelfAward() {
-    const account = process.env.ACCOUNT
-    const wif = process.env.WIF
-    VIZ.origin.getAccount(account).then(data => {
-        let last_vote_time = Date.parse(data['last_vote_time'])
-        let delta_time = (new Date().getTime() - last_vote_time + (new Date().getTimezoneOffset() * 60000)) / 1000
-        let energy = data['energy']
-        let new_energy = parseInt(energy + (delta_time * 10000 / 432000)) //CHAIN_ENERGY_REGENERATION_SECONDS 5 days
-        if (new_energy > 10000) {
-            new_energy = 10000
-        }
-        console.log("Make self award with energy", energy)
-        VIZ.origin.award(account, account, wif, energy, "", null, account).catch(_ => VIZ.origin.changeNode())
-    })
+/**
+ * Chain timestamps come without a 'Z' suffix, so Date.parse treats them as
+ * local time — the getTimezoneOffset() term cancels that out.
+ */
+export function computeRegeneratedEnergy(currentEnergy: number, lastVoteTime: string, now: Date = new Date()): number {
+    const lastVote = Date.parse(lastVoteTime)
+    const deltaSeconds = (now.getTime() - lastVote + (now.getTimezoneOffset() * 60000)) / 1000
+    // CHAIN_ENERGY_REGENERATION_SECONDS = 432000 (5 days)
+    const newEnergy = Math.floor(currentEnergy + (deltaSeconds * 10000 / 432000))
+    return Math.min(newEnergy, 10000)
 }
 
-function randomFromInterval(min, max) { // min and max included 
+export async function makeSelfAward() {
+    const account = process.env.ACCOUNT
+    const wif = process.env.WIF
+    try {
+        const data = await VIZ.origin.getAccount(account)
+        const energy = data['energy']
+        const newEnergy = computeRegeneratedEnergy(energy, data['last_vote_time'])
+        console.log("Make self award with energy", newEnergy)
+        await VIZ.origin.award(account, account, wif, newEnergy, "", null, account)
+    } catch (_) {
+        VIZ.origin.changeNode()
+    }
+}
+
+function randomFromInterval(min: number, max: number) { // min and max included
     return Math.floor(Math.random() * (max - min + 1) + min)
 }
