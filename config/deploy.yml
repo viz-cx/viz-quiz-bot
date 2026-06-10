@@ -1,19 +1,20 @@
 # Kamal deploy config for viz-quiz-bot — a Telegram quiz bot that awards VIZ
 # on-chain (a startSelfAwarding loop fires the moment the bot launches, plus
-# withdrawal cheques + unstaking). NO inbound HTTP — Telegraf bot.launch() long-
+# withdrawal cheques + unstaking). NO inbound HTTP — grammY bot.start() long-
 # polls — so kamal-proxy is disabled (proxy: false, no top-level proxy block).
 # Stateful in the shared platform MongoDB (db `quiz`, migrated from `viz-quiz`).
 #
 # FUNDS-MOVING + STRICT SINGLE-INSTANCE: it signs VIZ operations with the WIF key,
-# and selfAward starts ON BOOT. Two instances = double awards. Cutover MUST stop
-# the legacy container first, then `kamal deploy` (infra runbook-viz-migration §3).
+# and selfAward starts ON BOOT. Two instances = double awards. The .kamal/hooks/
+# pre-app-boot fence (pattern from cube-worlds-bot) stops the old container before
+# the new one boots — rolling redeploys are safe at the cost of ~10-30s downtime.
 #
-# Cutover deploys commit 961e186 — the EXACT legacy running commit (Telegraf-era,
-# 2022-12-04) — for a session-safe lift-and-shift, NOT local master (which is 12
-# commits ahead: a Telegraf->grammY rewrite). The viz-quiz mongo data was written
-# by this version, so its schema matches. The grammY upgrade is a deliberate
-# follow-up. Build context is the repo root; the repo's Dockerfile (node:alpine3.11,
-# USER node) is kept. Vestigial legacy env DOMAIN/PORT/CERT are dropped (unused).
+# 2026-06-10: scaffold rebased onto master (grammY rewrite, 12 commits past the
+# legacy Telegraf-era 961e186 that the 2026-06-04 cutover lift-and-shifted). The
+# rewrite also drops the dead viz.lexai.host public node that was crash-looping
+# the legacy build (6 restarts). Build context is the repo root; the repo's
+# Dockerfile (node:alpine3.11, USER node) is kept. Vestigial legacy env
+# DOMAIN/PORT/CERT are dropped (unused).
 
 service: viz-quiz-bot
 image:   chiliec/viz-quiz-bot       # GHCR: composed to ghcr.io/chiliec/viz-quiz-bot via registry.server
@@ -22,7 +23,7 @@ servers:
   web:
     hosts:
       - 5.223.75.86               # axveer VPS public IPv4
-    proxy: false                  # Telegraf long-polling bot — no inbound HTTP
+    proxy: false                  # grammY long-polling bot — no inbound HTTP
 
 # (no top-level proxy:, no ssl, no healthcheck — nothing to expose.)
 
