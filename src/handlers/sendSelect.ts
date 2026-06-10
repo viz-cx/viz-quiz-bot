@@ -214,7 +214,7 @@ export async function waitMiddleware(ctx: MyContext, next: NextFunction) {
                 quiz.correctAnswerIndices = parsed.correctAnswerIndices
                 quiz.description = parsed.description
                 quiz.authorId = ctx.dbuser.id
-                quiz.sectionId = ctx.dbuser.selectedSection
+                quiz.sectionId = ctx.dbuser.selectedSection as mongoose.Types.ObjectId
                 let newQuiz = await quiz.save()
 
                 ctx.dbuser.state = ''
@@ -306,7 +306,7 @@ function cancelKeyboard(ctx: MyContext, data: CancelCallback = CancelCallback.ca
     return { reply_markup: new InlineKeyboard().text(ctx.i18n.t('cancel_button'), data) }
 }
 
-export function sectionsKeyboard(sections: DocumentType<Section[]>, ctx: MyContext) {
+export function sectionsKeyboard(sections: DocumentType<Section>[], ctx: MyContext) {
     const kb = new InlineKeyboard()
     kb.text('🔧 ' + ctx.i18n.t('create_button'), 'create_button').row()
     ;(sections as any as DocumentType<Section>[]).forEach((s: DocumentType<Section>) => {
@@ -319,7 +319,7 @@ export function sectionsKeyboard(sections: DocumentType<Section[]>, ctx: MyConte
     return { reply_markup: kb }
 }
 
-export function questionsKeyboard(quizzes: DocumentType<Quiz[]>, section: DocumentType<Section>, ctx: MyContext) {
+export function questionsKeyboard(quizzes: DocumentType<Quiz>[], section: DocumentType<Section>, ctx: MyContext) {
     const pubLabel = section.isPublic
         ? '🔒 ' + ctx.i18n.t('make_private')
         : '🌐 ' + ctx.i18n.t('make_public')

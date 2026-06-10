@@ -60,6 +60,10 @@ export class User {
 
   @prop({ required: false, min: 0, max: 10 })
   selectedAnswer: number
+
+  // Maintained by schemaOptions.timestamps (not schema props)
+  createdAt?: Date
+  updatedAt?: Date
 }
 
 export const UserModel = getModelForClass(User, {
@@ -118,12 +122,8 @@ export async function getUsersCount(afterDate: Date = new Date(0)): Promise<numb
   return await UserModel.countDocuments({ updatedAt: { $gt: afterDate } }).exec()
 }
 
-export async function getUsersNotifiedBefore(notificationDate: Date): Promise<DocumentType<User[]>> {
-  return await UserModel.find({
-    $or: [
-      { notifiedAt: "" }, { notifiedAt: { $lte: notificationDate } }
-    ]
-  }).exec()
+export async function getUsersNotifiedBefore(notificationDate: Date): Promise<DocumentType<User>[]> {
+  return await UserModel.find({ notifiedAt: { $lte: notificationDate } }).exec()
 }
 
 export async function getRichestUser(): Promise<DocumentType<User>> {

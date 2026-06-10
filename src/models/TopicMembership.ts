@@ -1,5 +1,6 @@
-import { prop, getModelForClass, mongoose } from '@typegoose/typegoose'
+import { prop, getModelForClass, index, mongoose } from '@typegoose/typegoose'
 
+@index({ sectionId: 1, userId: 1 }, { unique: true })
 export class TopicMembership {
     @prop({ required: true })
     sectionId: mongoose.Types.ObjectId
@@ -15,7 +16,6 @@ export const TopicMembershipModel = getModelForClass(TopicMembership, {
     schemaOptions: {
         timestamps: true,
         collection: 'topicmemberships',
-        indexes: [{ fields: { sectionId: 1, userId: 1 }, options: { unique: true } }]
     },
 })
 

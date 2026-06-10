@@ -1,11 +1,26 @@
 import * as db from '../setup/db'
-import { UserModel, findUser, getOrCreateUser, addToBalance } from '@/models/User'
+import { UserModel, findUser, getOrCreateUser, addToBalance, getUsersNotifiedBefore } from '@/models/User'
 import { SectionModel } from '@/models/Section'
 
 // ─── lifecycle ───────────────────────────────────────────────────────────────
 beforeAll(() => db.connect())
 afterAll(() => db.disconnect())
 afterEach(() => db.clear())
+
+// ─── getUsersNotifiedBefore ──────────────────────────────────────────────────
+describe('getUsersNotifiedBefore', () => {
+    it('returns only users whose notifiedAt is older than the given date', async () => {
+        await getOrCreateUser(801) // notifiedAt defaults to epoch 0
+        await getOrCreateUser(802)
+        await UserModel.updateOne({ id: 802 }, { $set: { notifiedAt: new Date() } })
+
+        const users = await getUsersNotifiedBefore(new Date(Date.now() - 1000))
+
+        const ids = users.map(u => u.id)
+        expect(ids).toContain(801)
+        expect(ids).not.toContain(802)
+    })
+})
 
 // ─── getOrCreateUser ─────────────────────────────────────────────────────────
 describe('getOrCreateUser', () => {

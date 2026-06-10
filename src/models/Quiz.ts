@@ -1,13 +1,15 @@
-import { prop, getModelForClass, DocumentType, mongoose, modelOptions } from '@typegoose/typegoose'
+import { prop, getModelForClass, DocumentType, mongoose, modelOptions, Ref } from '@typegoose/typegoose'
 import { Base } from '@typegoose/typegoose/lib/defaultClasses'
 
+export interface Quiz extends Base { }
+
 @modelOptions({ schemaOptions: { collection: 'quizzes' } })
-export class Quiz extends Base<mongoose.Schema.Type.String> {
+export class Quiz {
     @prop({ minlength: 1, maxlength: 255 })
     question: string
 
     @prop({ type: String, required: true, default: [] })
-    answers: mongoose.Types.Array<string>
+    answers: string[]
 
     @prop({ type: Number, required: true, default: [0] })
     correctAnswerIndices: number[]
@@ -32,19 +34,19 @@ export const QuizModel = getModelForClass(Quiz, {
     schemaOptions: { timestamps: true },
 })
 
-export async function findQuizById(id: string): Promise<DocumentType<Quiz>> {
-    return await QuizModel.findOne({ _id: id })
+export async function findQuizById(id: string | Ref<Quiz>): Promise<DocumentType<Quiz>> {
+    return await QuizModel.findById(id)
 }
 
 export async function findQuizByPollId(pollId: string): Promise<DocumentType<Quiz>> {
     return await QuizModel.findOne({ pollId: pollId })
 }
 
-export async function findQuizzesBySection(sectionId: mongoose.Types.ObjectId): Promise<DocumentType<Quiz[]>> {
+export async function findQuizzesBySection(sectionId: mongoose.Types.ObjectId): Promise<DocumentType<Quiz>[]> {
     return await QuizModel.find({ sectionId: sectionId })
 }
 
-export async function findUnasweredQuizzes(answeredIds: mongoose.Types.ObjectId[]): Promise<DocumentType<Quiz>> {
+export async function findUnasweredQuizzes(answeredIds: mongoose.Types.ObjectId[]): Promise<Quiz[]> {
     return await QuizModel.aggregate([
         { $match: { _id: { "$nin": answeredIds } } },
         { $sample: { size: 10 } }
@@ -58,7 +60,7 @@ export async function getQuizCountAfterDate(date: Date = new Date(0)): Promise<n
 export async function findUnansweredQuizzesInSection(
     sectionId: mongoose.Types.ObjectId,
     answeredIds: mongoose.Types.ObjectId[]
-): Promise<DocumentType<Quiz>> {
+): Promise<Quiz[]> {
     return await QuizModel.aggregate([
         { $match: { sectionId: sectionId, _id: { $nin: answeredIds } } },
         { $sample: { size: 10 } }

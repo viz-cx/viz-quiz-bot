@@ -2,6 +2,7 @@ import { sectionsKeyboard } from '@/handlers/sendSelect'
 import { addToBalance, findQuizByPollId, findUser, QuizModel } from '@/models'
 import { getSectionsByUser } from '@/models/Section'
 import { MyContext } from '@/types/context'
+import { mongoose } from '@typegoose/typegoose'
 import { NextFunction } from 'grammy'
 
 export async function proposeQuiz(ctx: MyContext, next: NextFunction) {
@@ -52,7 +53,7 @@ export async function proposeQuiz(ctx: MyContext, next: NextFunction) {
     quiz.explanation = poll.explanation
     quiz.authorId = ctx.message.from.id
     quiz.pollId = poll.id
-    quiz.sectionId = ctx.dbuser.selectedSection
+    quiz.sectionId = ctx.dbuser.selectedSection as mongoose.Types.ObjectId
     await quiz.save()
         .then(quiz => {
             payToAuthor(quiz.authorId, ctx)

@@ -15,11 +15,7 @@ let mongod: MongoMemoryServer
 export async function connect(): Promise<void> {
     mongod = await MongoMemoryServer.create()
     const uri = mongod.getUri()
-    await mongoose.connect(uri, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-        useCreateIndex: true,
-    } as any)
+    await mongoose.connect(uri)
 }
 
 /**
