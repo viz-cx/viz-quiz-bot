@@ -92,25 +92,28 @@ export async function sendQuiz(ctx: MyContext) {
     if (description) {
         pollOptions.description = description
     }
-    ctx.replyWithPoll(question, answers, pollOptions).then(msg => {
+    ctx.replyWithPoll(question, answers, pollOptions).then(async msg => {
         let user = ctx.dbuser
         user.pollId = msg.poll.id
         user.quizMessageId = msg.message_id
         user.quizId = randomQuiz._id
-        user.save()
-        setTimeout((userId, quizMessageId, messageId) => {
+        await user.save()
+        const closeTimer = setTimeout((userId, quizId, messageId) => {
             findUser(userId)
                 .then(u => {
                     let answeredQuizzes = u.answered
                     if (answeredQuizzes === null) {
                         answeredQuizzes = []
                     }
-                    if (!answeredQuizzes.includes(quizMessageId)) {
-                        closePoll(ctx, messageId)
+                    if (!answeredQuizzes.includes(quizId)) {
+                        return closePoll(ctx, messageId)
                     }
                 })
+                .catch(err => console.error(`Failed to close poll for user ${userId}`, err))
         }, (secondsToAnswer - 1) * 1000, user.id, user.quizId, msg.message_id)
-    })
+        // A pending close-poll timer must not hold the process open
+        closeTimer.unref()
+    }).catch(err => console.error('Failed to send quiz poll', err))
 }
 
 export async function deletePreviousMessage(ctx: MyContext) {

@@ -196,6 +196,27 @@ describe('setupStart — referral link', () => {
         expect(ctx.dbuser.referrer).toBe(6001)
     })
 
+    it('does not leave unhandled rejections when referral notifications fail', async () => {
+        await getOrCreateUser(6101) // the referrer
+        const user = await getOrCreateUser(6102)
+
+        const ctx = makeCtx({ dbuser: { ...user!.toObject(), id: 6102, referrer: undefined } as any })
+        ctx.match = '6101'
+        ctx.dbuser.save = jest.fn().mockResolvedValue({ id: 6102 })
+        ctx.api.sendMessage = jest.fn().mockRejectedValue(new Error('403: bot was blocked by the user'))
+
+        const unhandled: unknown[] = []
+        const onUnhandled = (reason: unknown) => unhandled.push(reason)
+        process.on('unhandledRejection', onUnhandled)
+
+        await invokeStartHandler(ctx)
+        // payToReferrer/payToReferral run in the background — let them settle
+        await new Promise<void>(r => setTimeout(r, 300))
+
+        process.off('unhandledRejection', onUnhandled)
+        expect(unhandled).toHaveLength(0)
+    })
+
     it('does not assign a referrer when referrer id equals own id (no self-referral)', async () => {
         const user = await getOrCreateUser(7001)
         const dbuser = Object.assign({}, user!.toObject(), {

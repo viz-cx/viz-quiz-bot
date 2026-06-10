@@ -25,6 +25,38 @@ function makePollMessage(poll: any, fromId: number) {
     }
 }
 
+// --- async robustness ---
+describe('proposeQuiz — async robustness', () => {
+    it('does not leave unhandled rejections when the author notification fails', async () => {
+        await getOrCreateUser(900)
+        const section = await createSection(900)
+
+        const ctx = makeCtx({
+            dbuser: { id: 900, selectedSection: section._id } as any,
+            message: makePollMessage({
+                type: 'quiz',
+                id: 'reject-poll',
+                question: 'Q?',
+                correct_option_ids: [0],
+                options: [{ text: 'A' }, { text: 'B' }],
+            }, 900),
+        })
+        ctx.forwardMessage = jest.fn().mockResolvedValue(undefined)
+        ctx.api.sendMessage = jest.fn().mockRejectedValue(new Error('403: bot was blocked by the user'))
+
+        const unhandled: unknown[] = []
+        const onUnhandled = (reason: unknown) => unhandled.push(reason)
+        process.on('unhandledRejection', onUnhandled)
+
+        await proposeQuiz(ctx, jest.fn())
+        // payToAuthor runs in the background — give its chain time to settle
+        await new Promise<void>(resolve => setTimeout(resolve, 300))
+
+        process.off('unhandledRejection', onUnhandled)
+        expect(unhandled).toHaveLength(0)
+    })
+})
+
 describe('proposeQuiz — guard clauses', () => {
     it('calls next() when ctx.message is undefined', async () => {
         const ctx = makeCtx()

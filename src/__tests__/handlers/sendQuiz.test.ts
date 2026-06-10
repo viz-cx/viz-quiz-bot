@@ -48,6 +48,52 @@ function makeQuizCtx(quizId: any, difficulty: Difficulty = Difficulty.Normal) {
     return ctx
 }
 
+// --- async robustness ---
+describe('sendQuiz — async robustness', () => {
+    async function scheduleCloseTimer() {
+        await getOrCreateUser(9999)
+        await getOrCreateUser(1001)
+        const quiz = await createQuizInDb()
+        const ctx = makeQuizCtx(quiz._id)
+
+        const spy = jest.spyOn(global, 'setTimeout')
+        await sendQuiz(ctx)
+        // Let the replyWithPoll .then chain run and schedule the timer
+        await new Promise<void>(r => setTimeout(r, 100))
+        // The close-poll timer is the only long one (>= 9s; Nightmare is shortest at 10s)
+        const calls = spy.mock.calls as unknown as any[][]
+        const idx = calls.findIndex(c => typeof c[1] === 'number' && c[1] >= 9000)
+        const call = idx >= 0 ? calls[idx] : null
+        const timer = idx >= 0 ? (spy.mock.results[idx].value as NodeJS.Timeout) : null
+        spy.mockRestore()
+        if (timer) clearTimeout(timer)
+        return { call, timer }
+    }
+
+    it('schedules the poll-close timer unref()ed so it cannot block process exit', async () => {
+        const { timer } = await scheduleCloseTimer()
+        expect(timer).not.toBeNull()
+        expect(timer!.hasRef()).toBe(false)
+    })
+
+    it('does not leave unhandled rejections when the timer fires for a missing user', async () => {
+        const { call } = await scheduleCloseTimer()
+        expect(call).not.toBeNull()
+        const [callback, , , quizId, messageId] = call!
+
+        const unhandled: unknown[] = []
+        const onUnhandled = (reason: unknown) => unhandled.push(reason)
+        process.on('unhandledRejection', onUnhandled)
+
+        // Fire the captured callback for a user that no longer exists
+        ;(callback as Function)(424242, quizId, messageId)
+        await new Promise<void>(r => setTimeout(r, 300))
+
+        process.off('unhandledRejection', onUnhandled)
+        expect(unhandled).toHaveLength(0)
+    })
+})
+
 describe('sendQuiz — API parameters', () => {
     it('passes correct_option_ids as array for single-correct quiz', async () => {
         await getOrCreateUser(9999)

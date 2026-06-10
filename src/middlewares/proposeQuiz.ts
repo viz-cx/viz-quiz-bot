@@ -74,13 +74,13 @@ export async function proposeQuiz(ctx: MyContext, next: NextFunction) {
 function payToAuthor(authorId: number, ctx: MyContext) {
     let add = 500
     addToBalance(authorId, add)
-        .then(_ => {
-            findUser(authorId)
-                .then(author => {
-                    let payload = { score: add, balance: author.balance }
-                    ctx.api.sendMessage(author.id, ctx.i18n.t('success_pay_for_quiz', payload))
-                })
+        .then(() => findUser(authorId))
+        .then(author => {
+            if (author) {
+                return ctx.api.sendMessage(author.id, ctx.i18n.t('success_pay_for_quiz', { score: add, balance: author.balance }))
+            }
         })
+        .catch(err => console.error(`Failed to pay/notify quiz author ${authorId}`, err))
 }
 
 async function sendToSupport(ctx: MyContext) {

@@ -50,15 +50,15 @@ export function setupStart(bot: Bot<MyContext>) {
                         if (result) {
                             console.log("Add referrer", referrer, "to user", user.id)
                             user.referrer = referrer
-                            user.save().then(u => {
+                            return user.save().then(u => {
                                 payToReferrer(referrer, ctx)
                                 payToReferral(u.id, ctx)
                             })
                         } else {
                             console.log('Referrer', referrer, 'doesn\'t exists')
                         }
-                    }, err => console.log('Referrer error', referrer, err)
-                    )
+                    })
+                    .catch(err => console.log('Referrer error', referrer, err))
             }
         } else {
             user.referrer = 1
@@ -71,22 +71,23 @@ export function setupStart(bot: Bot<MyContext>) {
 function payToReferrer(referrerId: number, ctx: MyContext) {
     let add = 1000
     addToBalance(referrerId, add)
-        .then(_ => {
-            findUser(referrerId).then(u => {
-                let payload = { score: add, balance: u.balance }
-                ctx.api.sendMessage(u.id, ctx.i18n.t('success_pay_referrer', payload))
-            })
+        .then(() => findUser(referrerId))
+        .then(u => {
+            if (u) {
+                return ctx.api.sendMessage(u.id, ctx.i18n.t('success_pay_referrer', { score: add, balance: u.balance }))
+            }
         })
+        .catch(err => console.error(`Failed to pay/notify referrer ${referrerId}`, err))
 }
 
 function payToReferral(referralId: number, ctx: MyContext) {
     let add = 1000
     addToBalance(referralId, add)
-        .then(_ => {
-            findUser(referralId)
-                .then(u => {
-                    let payload = { score: add, balance: u.balance }
-                    ctx.api.sendMessage(u.id, ctx.i18n.t('success_pay_referral', payload))
-                })
+        .then(() => findUser(referralId))
+        .then(u => {
+            if (u) {
+                return ctx.api.sendMessage(u.id, ctx.i18n.t('success_pay_referral', { score: add, balance: u.balance }))
+            }
         })
+        .catch(err => console.error(`Failed to pay/notify referral ${referralId}`, err))
 }
