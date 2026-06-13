@@ -172,7 +172,11 @@ export async function checkAnswer(ctx: MyContext, next: NextFunction) {
             console.log(`Incorrect answer for user ${user.id}`)
             user.multiplier = 0
         }
+        // Clear quizId and pollId so redelivered/duplicate poll updates (votes,
+        // poll-close events, post-restart backlog) can't re-trigger payouts.
+        // With pollId nulled, findUserByPollId won't re-match this poll.
         user.quizId = null
+        user.pollId = null
         await user.save()
     } else {
         return next()

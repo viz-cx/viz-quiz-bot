@@ -493,6 +493,62 @@ describe('checkAnswer — multi-correct quizzes', () => {
     })
 })
 
+// --- idempotency (duplicate / redelivered poll updates) ---
+describe('checkAnswer — idempotency', () => {
+    it('clears pollId after a successful payout', async () => {
+        const { ctx } = await buildScenario({ solverId: 9301, authorId: 9302 })
+        await checkAnswer(ctx, jest.fn())
+        await flush()
+        expect(ctx.dbuser.pollId).toBeNull()
+        expect(ctx.dbuser.quizId).toBeNull()
+    })
+
+    it('clears pollId after an incorrect answer', async () => {
+        const quiz = await createQuiz(9402)
+        const pollId = 'poll-wrong-idem'
+        const ctx = makeCtx({
+            dbuser: {
+                id: 9401,
+                balance: 0,
+                multiplier: 0,
+                difficulty: Difficulty.Normal,
+                answered: [],
+                quizId: quiz._id,
+                pollId,
+            } as any,
+            poll: makePoll(pollId, false) as any,
+        })
+        ctx.dbuser.save = jest.fn().mockResolvedValue(undefined)
+        await checkAnswer(ctx, jest.fn())
+        await flush()
+        expect(ctx.dbuser.pollId).toBeNull()
+    })
+
+    it('does not pay or notify twice when the same poll update is reprocessed', async () => {
+        const { ctx, authorId } = await buildScenario({ solverId: 9501, authorId: 9502 })
+
+        // First (legitimate) processing.
+        await checkAnswer(ctx, jest.fn())
+        await flush()
+
+        const solverBalanceAfterFirst = ctx.dbuser.balance
+        const authorAfterFirst = await findUser(authorId)
+        const sendsAfterFirst = ctx.api.sendMessage.mock.calls.length
+
+        // Telegram redelivers the SAME poll update (vote/close/backlog replay).
+        // pollId is now cleared, so the mismatch guard must short-circuit it.
+        const next = jest.fn()
+        await checkAnswer(ctx, next)
+        await flush()
+
+        expect(next).toHaveBeenCalled()
+        expect(ctx.dbuser.balance).toBe(solverBalanceAfterFirst)
+        const authorAfterSecond = await findUser(authorId)
+        expect(authorAfterSecond!.balance).toBe(authorAfterFirst!.balance)
+        expect(ctx.api.sendMessage.mock.calls.length).toBe(sendsAfterFirst)
+    })
+})
+
 // --- async robustness ---
 describe('checkAnswer — async robustness', () => {
     it('persists user state before checkAnswer resolves', async () => {
