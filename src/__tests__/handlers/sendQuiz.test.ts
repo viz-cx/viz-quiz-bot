@@ -19,7 +19,7 @@ async function createQuizInDb(answers: string[] = ['Right', 'Wrong1', 'Wrong2'])
     })
 }
 
-function makeQuizCtx(quizId: any, difficulty: Difficulty = Difficulty.Normal) {
+function makeQuizCtx(_quizId: any, difficulty: Difficulty = Difficulty.Normal) {
     const ctx = makeCtx({
         dbuser: {
             id: 1001, balance: 0, multiplier: 0, difficulty,
@@ -81,7 +81,7 @@ describe('sendQuiz — inline buttons', () => {
         const timer = spy.mock.results[idx].value as NodeJS.Timeout
         expect(timer.hasRef()).toBe(false)
 
-        const [callback, , userIdArg, chatIdArg, messageIdArg, quizIdArg] = calls[idx]
+        const [callback, , _userIdArg, chatIdArg, messageIdArg, quizIdArg] = calls[idx]
         spy.mockRestore()
         clearTimeout(timer)
 

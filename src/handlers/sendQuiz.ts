@@ -2,7 +2,6 @@ import { findQuizById, findUnasweredQuizzes, findUnansweredQuizzesInSection, Qui
 import { MyContext } from "@/types/context"
 import { nextQuestionKeyboard } from "@/helpers/keyboard2"
 import { Difficulty, findUser, User } from "@/models"
-import { DocumentType } from "@typegoose/typegoose/lib/types"
 import { mongoose } from "@typegoose/typegoose"
 
 const exitTopicKeyboard = {
