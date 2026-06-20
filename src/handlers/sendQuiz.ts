@@ -1,6 +1,6 @@
 import { findQuizById, findUnasweredQuizzes, findUnansweredQuizzesInSection, Quiz } from "@/models/Quiz"
 import { MyContext } from "@/types/context"
-import { nextQuestionKeyboard } from "@/middlewares/checkAnswer"
+import { nextQuestionKeyboard } from "@/helpers/keyboard2"
 import { Difficulty, findUser, User } from "@/models"
 import { DocumentType } from "@typegoose/typegoose/lib/types"
 import { mongoose } from "@typegoose/typegoose"
