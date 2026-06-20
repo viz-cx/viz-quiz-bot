@@ -50,15 +50,6 @@ export async function sendQuiz(ctx: MyContext) {
         }
     }
 
-    // Inline-button path only supports single-correct quizzes.
-    unansweredQuizzes = unansweredQuizzes.filter((q: any) =>
-        Array.isArray(q.correctAnswerIndices) && q.correctAnswerIndices.length === 1
-    )
-    if (unansweredQuizzes.length === 0) {
-        await ctx.reply(ctx.i18n.t('no_unanswered_quizzes'), { reply_markup: nextQuestionKeyboard })
-        return
-    }
-
     let randomQuiz: Quiz
     if (ctx.dbuser.quizId !== null) {
         randomQuiz = await findQuizById(ctx.dbuser.quizId)
