@@ -83,7 +83,6 @@ export async function sendQuiz(ctx: MyContext) {
         user.quizMessageId = msg.message_id
         user.quizId = randomQuiz._id
         user.quizExpiresAt = new Date(Date.now() + secondsToAnswer * 1000)
-        user.pollId = null
         await user.save()
 
         const expireTimer = setTimeout((userId: number, chatId: number, messageId: number, quizIdStr: string) => {
