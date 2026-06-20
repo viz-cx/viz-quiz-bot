@@ -11,7 +11,7 @@
 import { mongoose } from '@typegoose/typegoose'
 import * as db from '../setup/db'
 import { makeCtx } from '../setup/contextFactory'
-import { checkAnswer, computeAccuracy } from '@/middlewares/checkAnswer'
+import { checkAnswer, computeAccuracy, MAX_MULTIPLIER, EARN_WINDOW_CAP } from '@/middlewares/checkAnswer'
 import { QuizModel } from '@/models/Quiz'
 import { getOrCreateUser, findUser, UserModel } from '@/models/User'
 import { upsertTopicMembership } from '@/models/TopicMembership'
@@ -582,5 +582,89 @@ describe('checkAnswer — async robustness', () => {
 
         process.off('unhandledRejection', onUnhandled)
         expect(unhandled).toHaveLength(0)
+    })
+})
+
+// --- anti-grind rate limiting / caps ---
+describe('checkAnswer — anti-grind caps', () => {
+    it('caps the multiplier used for reward at MAX_MULTIPLIER', async () => {
+        const { ctx } = await buildScenario({ solverId: 9001, authorId: 9002 })
+        // Simulate a legacy inflated streak.
+        ctx.dbuser.multiplier = 309
+
+        await checkAnswer(ctx, jest.fn())
+        await flush()
+
+        // Reward is computed as if multiplier were MAX_MULTIPLIER (10):
+        // totalReward = 100 + (100/10 * 10) = 200, Normal x1, solver 60% = 120.
+        expect(ctx.dbuser.balance).toBeCloseTo(200 * 0.6, 0)
+        // Stored streak is clamped, not incremented past the cap.
+        expect(ctx.dbuser.multiplier).toBe(MAX_MULTIPLIER)
+    })
+
+    it('does not let the streak grow past MAX_MULTIPLIER on a correct answer', async () => {
+        const { ctx } = await buildScenario({ solverId: 9011, authorId: 9012 })
+        ctx.dbuser.multiplier = MAX_MULTIPLIER
+
+        await checkAnswer(ctx, jest.fn())
+        await flush()
+
+        expect(ctx.dbuser.multiplier).toBe(MAX_MULTIPLIER)
+    })
+
+    it('suppresses reward and notifications when answering too fast', async () => {
+        const { ctx, authorId } = await buildScenario({ solverId: 9101, authorId: 9102 })
+        // Last rewarded answer was effectively "just now".
+        ctx.dbuser.lastAnsweredAt = new Date()
+        const quizId = ctx.dbuser.quizId!.toString()
+
+        await checkAnswer(ctx, jest.fn())
+        await flush()
+
+        expect(ctx.dbuser.balance).toBe(0)
+        const recipients = ctx.api.sendMessage.mock.calls.map((c: any[]) => c[0])
+        expect(recipients).not.toContain(9101) // no solver notification
+        expect(recipients).not.toContain(9102) // no author notification (no spam)
+        const authorDb = await findUser(authorId)
+        expect(authorDb!.balance).toBe(0)
+        // Quiz is still consumed so it isn't re-served (quizId is cleared after).
+        expect(ctx.dbuser.answered.map((id: any) => id.toString())).toContain(quizId)
+    })
+
+    it('suppresses reward when the per-window cap is exhausted', async () => {
+        const { ctx } = await buildScenario({ solverId: 9201, authorId: 9202 })
+        ctx.dbuser.earnWindowStart = new Date()
+        ctx.dbuser.earnWindowCount = EARN_WINDOW_CAP
+
+        await checkAnswer(ctx, jest.fn())
+        await flush()
+
+        expect(ctx.dbuser.balance).toBe(0)
+        const recipients = ctx.api.sendMessage.mock.calls.map((c: any[]) => c[0])
+        expect(recipients).not.toContain(9201)
+    })
+
+    it('resets the window and rewards once the window has elapsed', async () => {
+        const { ctx } = await buildScenario({ solverId: 9301, authorId: 9302 })
+        // Window started long ago and was previously maxed out.
+        ctx.dbuser.earnWindowStart = new Date(Date.now() - 2 * 60 * 60 * 1000)
+        ctx.dbuser.earnWindowCount = EARN_WINDOW_CAP
+
+        await checkAnswer(ctx, jest.fn())
+        await flush()
+
+        // Fresh window: rewarded normally and counter restarts at 1.
+        expect(ctx.dbuser.balance).toBeCloseTo(60, 0)
+        expect(ctx.dbuser.earnWindowCount).toBe(1)
+    })
+
+    it('records tracking fields on a normal rewarded answer', async () => {
+        const { ctx } = await buildScenario({ solverId: 9401, authorId: 9402 })
+
+        await checkAnswer(ctx, jest.fn())
+        await flush()
+
+        expect(ctx.dbuser.lastAnsweredAt).toBeInstanceOf(Date)
+        expect(ctx.dbuser.earnWindowCount).toBe(1)
     })
 })

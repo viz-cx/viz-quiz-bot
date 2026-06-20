@@ -37,6 +37,17 @@ export class User {
   @prop({ required: true, default: 0 })
   multiplier: number
 
+  // Anti-grind rate limiting (see checkAnswer). Timestamp of the last rewarded
+  // answer, plus a rolling window counter that caps rewarded answers per period.
+  @prop({ required: false })
+  lastAnsweredAt?: Date
+
+  @prop({ required: false })
+  earnWindowStart?: Date
+
+  @prop({ required: true, default: 0 })
+  earnWindowCount: number
+
   @prop({ required: true, default: new Date(0) })
   notifiedAt: Date
 
