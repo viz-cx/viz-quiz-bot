@@ -48,6 +48,11 @@ export class User {
   @prop({ required: true, default: 0 })
   earnWindowCount: number
 
+  // Authoritative expiry for the currently-served question. The in-memory
+  // sendQuiz timer is UX-only; correctness/expiry is decided against this.
+  @prop({ required: false })
+  quizExpiresAt?: Date
+
   @prop({ required: true, default: new Date(0) })
   notifiedAt: Date
 
