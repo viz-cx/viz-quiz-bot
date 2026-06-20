@@ -4,9 +4,7 @@ import * as db from '../setup/db'
 import { makeCtx } from '../setup/contextFactory'
 import { awardForAnswer, MAX_MULTIPLIER, EARN_WINDOW_CAP } from '@/middlewares/award'
 import { QuizModel } from '@/models/Quiz'
-import { getOrCreateUser, findUser, UserModel } from '@/models/User'
-import { upsertTopicMembership } from '@/models/TopicMembership'
-import { Difficulty } from '@/models/User'
+import { findUser, Difficulty } from '@/models/User'
 
 beforeAll(() => db.connect())
 afterAll(() => db.disconnect())
@@ -36,8 +34,6 @@ function ctxFor(solverId: number, extra: any = {}) {
 
 describe('awardForAnswer', () => {
     it('pays solver 60% and author 40% on a correct answer', async () => {
-        const author = await getOrCreateUser(5002)
-        const solver = await getOrCreateUser(5001)
         const quiz = await makeQuiz(5002)
         const ctx = ctxFor(5001, { quizId: quiz._id })
 
