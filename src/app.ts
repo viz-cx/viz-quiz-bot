@@ -13,7 +13,7 @@ import { setLanguage, sendLanguage } from '@/handlers/language'
 import { attachUser } from '@/middlewares/attachUser'
 import { sendQuiz } from '@/handlers/sendQuiz'
 import { sendResults } from '@/handlers/sendResults'
-import { checkAnswer } from '@/middlewares/checkAnswer'
+import { answerCallback } from '@/middlewares/answerCallback'
 import { nextQuestionCallback } from '@/middlewares/nextQuestionCallback'
 import { proposeQuiz } from './middlewares/proposeQuiz'
 import { startUnstaking } from './unstake'
@@ -33,7 +33,7 @@ bot.use(ignoreOldMessageUpdates)
 bot.use(attachUser)
 bot.use(i18nMiddleware, attachI18N)
 bot.use(cancelCallback)
-bot.use(checkAnswer)
+bot.use(answerCallback)
 bot.use(nextQuestionCallback)
 bot.use(proposeQuiz)
 bot.use(resetCallback)
