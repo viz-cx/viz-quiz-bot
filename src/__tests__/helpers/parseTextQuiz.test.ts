@@ -11,13 +11,9 @@ describe('parseTextQuiz', () => {
         expect(result.description).toBeUndefined()
     })
 
-    it('parses multi-correct quiz with + markers', () => {
+    it('returns null for multi-correct quiz with + markers (single-correct only)', () => {
         const text = `Which are prime?\n+2\n+3\n4\n+5\n6`
-        const result = parseTextQuiz(text)
-        expect(result).not.toBeNull()
-        expect(result.question).toBe('Which are prime?')
-        expect(result.answers).toEqual(['2', '3', '4', '5', '6'])
-        expect(result.correctAnswerIndices).toEqual([0, 1, 3])
+        expect(parseTextQuiz(text)).toBeNull()
     })
 
     it('detects description when line 2 is 30+ chars without + prefix', () => {
@@ -47,13 +43,9 @@ describe('parseTextQuiz', () => {
         expect(result.correctAnswerIndices).toEqual([0])
     })
 
-    it('handles description + markers combined', () => {
+    it('returns null for description + multi-correct markers (single-correct only)', () => {
         const text = `Which planets are rocky?\nSelect all terrestrial planets from the list below\n+Mercury\n+Venus\nJupiter\n+Earth`
-        const result = parseTextQuiz(text)
-        expect(result).not.toBeNull()
-        expect(result.description).toBe('Select all terrestrial planets from the list below')
-        expect(result.answers).toEqual(['Mercury', 'Venus', 'Jupiter', 'Earth'])
-        expect(result.correctAnswerIndices).toEqual([0, 1, 3])
+        expect(parseTextQuiz(text)).toBeNull()
     })
 
     it('returns null for less than 3 lines (question + min 2 answers)', () => {
@@ -103,5 +95,18 @@ describe('parseTextQuiz', () => {
         const result = parseTextQuiz(text)
         expect(result.answers).toEqual(['Wrong1', 'Right', 'Wrong2'])
         expect(result.correctAnswerIndices).toEqual([1])
+    })
+})
+
+describe('parseTextQuiz — single-correct constraint', () => {
+    it('returns null when more than one answer is marked correct', () => {
+        const text = 'Question?\n+Right one\n+Also right\nWrong'
+        expect(parseTextQuiz(text)).toBeNull()
+    })
+
+    it('still parses a single-correct quiz', () => {
+        const parsed = parseTextQuiz('Question?\n+Right\nWrong\nAlso wrong')
+        expect(parsed).not.toBeNull()
+        expect(parsed!.correctAnswerIndices).toEqual([0])
     })
 })

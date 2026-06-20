@@ -47,8 +47,8 @@ export function parseTextQuiz(text: string): ParsedQuiz {
         correctAnswerIndices.push(0)
     }
 
-    // Must have at least one correct answer
-    if (correctAnswerIndices.length === 0) {
+    // Exactly one correct answer (single-tap quizzes only).
+    if (correctAnswerIndices.length !== 1) {
         return null
     }
 
