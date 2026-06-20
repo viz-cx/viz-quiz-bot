@@ -202,7 +202,10 @@ export async function waitMiddleware(ctx: MyContext, next: NextFunction) {
         case waitQuestionState:
             if (!ctx.dbuser.selectedQuestion) { // new question
                 const parsed = parseTextQuiz(text)
-                if (!parsed || parsed.answers.length < 2) {
+                if (!parsed) {
+                    return ctx.reply(ctx.i18n.t('create_question_single_correct'), cancelKeyboard(ctx, CancelCallback.cancel_question))
+                }
+                if (parsed.answers.length < 2) {
                     return ctx.reply(ctx.i18n.t('create_question_min'), cancelKeyboard(ctx, CancelCallback.cancel_question))
                 }
                 if (parsed.answers.length > 10) {

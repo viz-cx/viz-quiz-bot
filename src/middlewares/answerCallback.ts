@@ -29,7 +29,8 @@ export async function answerCallback(ctx: MyContext, next: NextFunction) {
     }
 
     // Authoritative expiry check (survives restarts; timer is UX-only).
-    if (user.quizExpiresAt && new Date() > user.quizExpiresAt) {
+    // Treat missing quizExpiresAt as expired — guards pre-migration state.
+    if (!user.quizExpiresAt || new Date() > user.quizExpiresAt) {
         user.quizId = null
         user.quizMessageId = null
         user.quizExpiresAt = null

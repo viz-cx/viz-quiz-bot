@@ -61,7 +61,7 @@ export async function awardForAnswer(
         user.multiplier = 0
         user.lastAnsweredAt = now
         user.earnWindowStart = windowStart
-        user.earnWindowCount = windowCount
+        user.earnWindowCount = windowCount + 1
         user.answered.push(user.quizId)
         return { rewarded: false, suppressed: true, solverReward: 0 }
     }

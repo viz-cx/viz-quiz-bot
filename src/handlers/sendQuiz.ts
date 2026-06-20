@@ -50,6 +50,15 @@ export async function sendQuiz(ctx: MyContext) {
         }
     }
 
+    // Inline-button path only supports single-correct quizzes.
+    unansweredQuizzes = unansweredQuizzes.filter((q: any) =>
+        Array.isArray(q.correctAnswerIndices) && q.correctAnswerIndices.length === 1
+    )
+    if (unansweredQuizzes.length === 0) {
+        await ctx.reply(ctx.i18n.t('no_unanswered_quizzes'), { reply_markup: nextQuestionKeyboard })
+        return
+    }
+
     let randomQuiz: Quiz
     if (ctx.dbuser.quizId !== null) {
         randomQuiz = await findQuizById(ctx.dbuser.quizId)
@@ -78,6 +87,9 @@ export async function sendQuiz(ctx: MyContext) {
         { text, callback_data: `ans:${randomQuiz._id.toString()}:${i}` }
     ])
 
+    const botApi = ctx.api
+    const timeUpText = ctx.i18n.t('time_up')
+
     ctx.reply(question, { reply_markup: { inline_keyboard: buttons } }).then(async (msg: any) => {
         let user = ctx.dbuser
         user.quizMessageId = msg.message_id
@@ -93,7 +105,7 @@ export async function sendQuiz(ctx: MyContext) {
                         u.quizMessageId = null
                         u.quizExpiresAt = null
                         return u.save().then(() =>
-                            ctx.api.editMessageText(chatId, messageId, ctx.i18n.t('time_up'))
+                            botApi.editMessageText(chatId, messageId, timeUpText)
                                 .catch(() => { }))
                     }
                 })
