@@ -50,6 +50,17 @@ export async function sendQuiz(ctx: MyContext) {
         }
     }
 
+    // Skip confirmed multi-correct quizzes — inline buttons only support a single tap.
+    // Legacy docs without the field (aggregate skips Mongoose defaults) are served as-is;
+    // answerCallback fetches them via findQuizById which applies the [0] default.
+    unansweredQuizzes = unansweredQuizzes.filter((q: any) =>
+        !Array.isArray(q.correctAnswerIndices) || q.correctAnswerIndices.length <= 1
+    )
+    if (unansweredQuizzes.length === 0) {
+        await ctx.reply(ctx.i18n.t('no_unanswered_quizzes'), { reply_markup: nextQuestionKeyboard })
+        return
+    }
+
     let randomQuiz: Quiz
     if (ctx.dbuser.quizId !== null) {
         randomQuiz = await findQuizById(ctx.dbuser.quizId)
