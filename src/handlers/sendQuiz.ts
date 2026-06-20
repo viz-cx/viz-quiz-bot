@@ -60,9 +60,6 @@ export async function sendQuiz(ctx: MyContext) {
     }
     let question = randomQuiz.question
     let answers = randomQuiz.answers
-    let correctOptionIds = randomQuiz.correctAnswerIndices ?? [0]
-    let explanation = randomQuiz.explanation
-    let description = randomQuiz.description
     let secondsToAnswer: number
     switch ((ctx.dbuser as User).difficulty) {
         case Difficulty.Easy:
@@ -78,42 +75,34 @@ export async function sendQuiz(ctx: MyContext) {
             secondsToAnswer = 60
             break
     }
-    const pollOptions: any = {
-        type: 'quiz',
-        is_anonymous: true,
-        allows_multiple_answers: correctOptionIds.length > 1,
-        correct_option_ids: correctOptionIds,
-        is_closed: false,
-        explanation: explanation,
-        open_period: secondsToAnswer,
-        shuffle_options: true,
-        hide_results_until_closes: true,
-    }
-    if (description) {
-        pollOptions.description = description
-    }
-    ctx.replyWithPoll(question, answers, pollOptions).then(async msg => {
+    const buttons = answers.map((text: string, i: number) => [
+        { text, callback_data: `ans:${randomQuiz._id.toString()}:${i}` }
+    ])
+
+    ctx.reply(question, { reply_markup: { inline_keyboard: buttons } }).then(async (msg: any) => {
         let user = ctx.dbuser
-        user.pollId = msg.poll.id
         user.quizMessageId = msg.message_id
         user.quizId = randomQuiz._id
+        user.quizExpiresAt = new Date(Date.now() + secondsToAnswer * 1000)
+        user.pollId = null
         await user.save()
-        const closeTimer = setTimeout((userId, quizId, messageId) => {
+
+        const expireTimer = setTimeout((userId: number, chatId: number, messageId: number, quizIdStr: string) => {
             findUser(userId)
                 .then(u => {
-                    let answeredQuizzes = u.answered
-                    if (answeredQuizzes === null) {
-                        answeredQuizzes = []
-                    }
-                    if (!answeredQuizzes.includes(quizId)) {
-                        return closePoll(ctx, messageId)
+                    if (u && u.quizId && u.quizId.toString() === quizIdStr) {
+                        u.quizId = null
+                        u.quizMessageId = null
+                        u.quizExpiresAt = null
+                        return u.save().then(() =>
+                            ctx.api.editMessageText(chatId, messageId, ctx.i18n.t('time_up'))
+                                .catch(() => { }))
                     }
                 })
-                .catch(err => console.error(`Failed to close poll for user ${userId}`, err))
-        }, (secondsToAnswer - 1) * 1000, user.id, user.quizId, msg.message_id)
-        // A pending close-poll timer must not hold the process open
-        closeTimer.unref()
-    }).catch(err => console.error('Failed to send quiz poll', err))
+                .catch(err => console.error(`Failed to expire quiz for user ${userId}`, err))
+        }, secondsToAnswer * 1000, user.id, ctx.chat.id, msg.message_id, randomQuiz._id.toString())
+        expireTimer.unref()
+    }).catch((err: any) => console.error('Failed to send quiz message', err))
 }
 
 export async function deletePreviousMessage(ctx: MyContext) {
@@ -125,8 +114,3 @@ export async function deletePreviousMessage(ctx: MyContext) {
     }
 }
 
-async function closePoll(ctx: MyContext, message_id: number) {
-    try {
-        await ctx.api.stopPoll(ctx.chat.id, message_id)
-    } catch (_) { }
-}
