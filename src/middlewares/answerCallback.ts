@@ -40,13 +40,21 @@ export async function answerCallback(ctx: MyContext, next: NextFunction) {
     }
 
     const correct = quiz.correctAnswerIndices.includes(optionIndex)
-    const result = await awardForAnswer(ctx, quiz, correct)
+    let result: import('@/middlewares/award').AwardResult | null = null
+    try {
+        result = await awardForAnswer(ctx, quiz, correct)
+    } finally {
+        // Always clear pending state for idempotency, even if awardForAnswer throws.
+        user.quizId = null
+        user.quizMessageId = null
+        user.quizExpiresAt = null
+        await user.save().catch(() => { })
+    }
 
-    // Clear pending state (idempotency) before rendering.
-    user.quizId = null
-    user.quizMessageId = null
-    user.quizExpiresAt = null
-    await user.save()
+    if (!result) {
+        await ctx.answerCallbackQuery().catch(() => { })
+        return
+    }
 
     let body: string
     if (result.suppressed) {
