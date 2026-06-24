@@ -21,6 +21,7 @@ import { startSelfAwarding } from './selfAward'
 import { makeCheque } from './handlers/withdrowal'
 import { sendStats } from './handlers/sendStats'
 import { startNotifications } from './sendNotifications'
+import { startDigests } from './sendDigests'
 import { difficultyEmojies, sendDifficulty, setDifficulty } from './handlers/difficulty'
 import { resetCallback, sendReset } from './handlers/sendReset'
 import { Emoji } from './helpers/keyboard'
@@ -76,5 +77,6 @@ bot.start({
         startSelfAwarding()
         startUnstaking()
         startNotifications()
+        startDigests()
     }
 })
