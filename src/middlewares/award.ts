@@ -1,6 +1,6 @@
 // src/middlewares/award.ts
 import { Difficulty, User } from '@/models'
-import { addToBalance, findUser } from '@/models/User'
+import { addToBalance, accumulatePassiveIncome } from '@/models/User'
 import { getInviterForTopic } from '@/models/TopicMembership'
 import { Quiz } from '@/models/Quiz'
 import { DocumentType } from '@typegoose/typegoose'
@@ -110,32 +110,18 @@ export async function awardForAnswer(
 
     if (authorId !== null && authorId !== user.id) {
         addToBalance(authorId, authorReward)
-            .then(() => findUser(authorId!))
-            .then(author => {
-                if (author) {
-                    return ctx.api.sendMessage(author.id, ctx.i18n.t('success_pay_for_quiz_answer', {
-                        score: Math.round(authorReward),
-                        balance: Math.round(author.balance)
-                    }))
-                }
-            })
-            .catch(err => console.error(`Failed to pay/notify author ${authorId}`, err))
+            .catch(err => console.error(`Failed to credit author ${authorId}`, err))
+        accumulatePassiveIncome(authorId, authorReward, 0)
+            .catch(err => console.error(`Failed to accumulate income for author ${authorId}`, err))
     } else if (authorId === user.id) {
         user.balance = user.balance + authorReward
     }
 
     if (hasInviter) {
         addToBalance(inviterId, inviterReward)
-            .then(() => findUser(inviterId))
-            .then(inviter => {
-                if (inviter) {
-                    return ctx.api.sendMessage(inviter.id, ctx.i18n.t('success_pay_as_inviter', {
-                        score: Math.round(inviterReward),
-                        balance: Math.round(inviter.balance)
-                    }))
-                }
-            })
-            .catch(err => console.error(`Failed to pay/notify inviter ${inviterId}`, err))
+            .catch(err => console.error(`Failed to credit inviter ${inviterId}`, err))
+        accumulatePassiveIncome(inviterId, 0, inviterReward)
+            .catch(err => console.error(`Failed to accumulate income for inviter ${inviterId}`, err))
     }
 
     user.answered.push(user.quizId)

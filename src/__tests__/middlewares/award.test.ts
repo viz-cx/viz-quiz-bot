@@ -80,4 +80,16 @@ describe('awardForAnswer', () => {
         expect(res.suppressed).toBe(true)
         expect(ctx.dbuser.balance).toBe(0)
     })
+
+    it('accumulates pending author income instead of immediately notifying', async () => {
+        const quiz = await makeQuiz(5010)
+        const ctx = ctxFor(5009, { quizId: quiz._id })
+
+        await awardForAnswer(ctx, quiz, true)
+        await flush()
+
+        expect(ctx.api.sendMessage).not.toHaveBeenCalled()
+        const authorDb = await findUser(5010)
+        expect(authorDb!.pendingAuthorIncome).toBeCloseTo(100 * 0.4, 0) // 40
+    })
 })
