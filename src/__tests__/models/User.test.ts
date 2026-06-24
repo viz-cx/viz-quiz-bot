@@ -1,5 +1,5 @@
 import * as db from '../setup/db'
-import { UserModel, findUser, getOrCreateUser, addToBalance, getUsersNotifiedBefore } from '@/models/User'
+import { UserModel, findUser, getOrCreateUser, addToBalance, getUsersNotifiedBefore, accumulatePassiveIncome } from '@/models/User'
 import { SectionModel } from '@/models/Section'
 
 // ─── lifecycle ───────────────────────────────────────────────────────────────
@@ -136,5 +136,37 @@ describe('User defaults', () => {
     it('starts with language = ru', async () => {
         const user = await getOrCreateUser(555)
         expect(user!.language).toBe('ru')
+    })
+})
+
+// ─── accumulatePassiveIncome ──────────────────────────────────────────────────
+describe('accumulatePassiveIncome', () => {
+    it('increments pendingAuthorIncome and sets digestDueAt ~24h from now', async () => {
+        await getOrCreateUser(301)
+        await accumulatePassiveIncome(301, 100, 0)
+        const user = await findUser(301)
+        expect(user!.pendingAuthorIncome).toBe(100)
+        expect(user!.pendingInviterIncome).toBe(0)
+        const expectedMs = Date.now() + 24 * 60 * 60 * 1000
+        expect(Math.abs(user!.digestDueAt!.getTime() - expectedMs)).toBeLessThan(5000)
+    })
+
+    it('accumulates income across multiple calls', async () => {
+        await getOrCreateUser(302)
+        await accumulatePassiveIncome(302, 100, 0)
+        await accumulatePassiveIncome(302, 50, 30)
+        const user = await findUser(302)
+        expect(user!.pendingAuthorIncome).toBe(150)
+        expect(user!.pendingInviterIncome).toBe(30)
+    })
+
+    it('does not reset digestDueAt on subsequent income', async () => {
+        await getOrCreateUser(303)
+        await accumulatePassiveIncome(303, 100, 0)
+        const first = await findUser(303)
+        const firstTs = first!.digestDueAt!.getTime()
+        await accumulatePassiveIncome(303, 50, 0)
+        const second = await findUser(303)
+        expect(second!.digestDueAt!.getTime()).toBe(firstTs)
     })
 })

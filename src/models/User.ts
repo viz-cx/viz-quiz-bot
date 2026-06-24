@@ -48,6 +48,15 @@ export class User {
   @prop({ required: true, default: 0 })
   earnWindowCount: number
 
+  @prop({ required: true, default: 0 })
+  pendingAuthorIncome: number
+
+  @prop({ required: true, default: 0 })
+  pendingInviterIncome: number
+
+  @prop({ required: false })
+  digestDueAt?: Date
+
   // Authoritative expiry for the currently-served question. The in-memory
   // sendQuiz timer is UX-only; correctness/expiry is decided against this.
   @prop({ required: false })
@@ -131,6 +140,25 @@ export async function addToBalance(userId: number, add: number) {
     {
       $inc: { balance: add }
     }, { upsert: true }
+  ).exec()
+}
+
+export async function accumulatePassiveIncome(
+  userId: number,
+  authorAmount: number,
+  inviterAmount: number
+): Promise<void> {
+  const dueAt = new Date(Date.now() + 24 * 60 * 60 * 1000)
+  await UserModel.updateOne(
+    { id: userId },
+    [{
+      $set: {
+        pendingAuthorIncome: { $add: [{ $ifNull: ['$pendingAuthorIncome', 0] }, authorAmount] },
+        pendingInviterIncome: { $add: [{ $ifNull: ['$pendingInviterIncome', 0] }, inviterAmount] },
+        digestDueAt: { $ifNull: ['$digestDueAt', dueAt] },
+      }
+    }],
+    { upsert: true }
   ).exec()
 }
 
