@@ -113,9 +113,10 @@ topic_link: "Пригласительная ссылка для темы «${top
 topic_invite_joined: "Вы присоединились к теме «${topic}»! Нажмите «🧠 Квиз» чтобы начать."
 topic_exhausted: Вы прошли все квизы в этой теме! Хотите выйти в общий режим?
 topic_exit_done: Вы вышли из темы. Теперь квизы снова из всех разделов.
-success_pay_for_quiz_answer: "Ваш квиз решён — вы получаете ${score} баллов (40%). Баланс: ${balance}"
-success_pay_as_inviter: "По вашей ссылке решён квиз — вы получаете ${score} баллов (20%). Баланс: ${balance}"
 answer_correct: "✅ Верно! +${score} баллов. Баланс: ${balance}"
 answer_incorrect: "❌ Неверно."
 answer_rate_limited: "Слишком часто — ответ не засчитан."
+digest_author_income: "Квизы принесли вам +${score} баллов (автор)"
+digest_inviter_income: "По вашим ссылкам +${score} баллов (реферал)"
+digest_balance: "Баланс: ${balance}"
 time_up: "⏱ Время вышло."
