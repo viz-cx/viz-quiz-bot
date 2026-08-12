@@ -32,7 +32,7 @@
     "dotenv": "^10.0.0",
     "grammy": "^1.42.0",
     "module-alias": "^2.2.2",
-    "mongoose": "~8.21.0",
+    "mongoose": "~8.22.1",
     "viz-js-lib": "^0.10.0"
   },
   "_moduleAliases": {
